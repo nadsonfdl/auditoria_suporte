@@ -1,0 +1,4 @@
+Require all denied
+<Files "webhook.php">
+    Require all granted
+</Files>

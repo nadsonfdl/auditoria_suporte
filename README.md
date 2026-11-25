@@ -1,0 +1,99 @@
+# Auditoria Suporte — iTalk (conta 3)
+
+Indicadores e auditoria de CSAT do suporte, alimentados pela **API e webhook do iTalk** (Chatwoot 4.16, self-hosted).
+O banco do iTalk **não é alterado**: tudo fica num banco de análise separado (`auditoria_suporte`), consumido pelo Metabase.
+
+## Estrutura
+
+```
+auditoria_suporte/
+├── .htaccess              # bloqueia o projeto inteiro na web
+├── public/
+│   ├── .htaccess          # libera SOMENTE webhook.php
+│   └── webhook.php        # recebe eventos de status das conversas (tempo real)
+├── bin/
+│   └── sync_api.php       # sincronização via API (cron a cada 15 min)
+├── src/
+│   └── lib.php            # funções compartilhadas (API, banco, mapeamento)
+├── sql/
+│   └── 01_schema.sql      # tabelas, fila CSAT e views do Metabase
+├── config/
+│   ├── config.example.php # modelo
+│   └── config.php         # (não versionado) token, senha, etc.
+└── docs/plano_b_banco/    # alternativa lendo direto do banco do Chatwoot (não usada)
+```
+
+## Arquitetura
+
+```
+iTalk (Chatwoot)  ── banco NÃO é alterado
+   │  API (token de admin da conta 3)          → bin/sync_api.php (cron)
+   │  Webhook da conta 3 (status de conversa)  → public/webhook.php
+   ▼
+Banco auditoria_suporte
+   ├─ espelho.*    → conversas, CSAT, agentes, times, caixas, contatos (só conta 3)
+   └─ auditoria.*  → eventos do webhook, fila CSAT, observações, config, views
+   ▼
+Metabase → indicador de resolução + fila CSAT editável + e-mail semanal ao pós-vendas
+```
+
+Detalhes do iTalk (validados em 25/11/2026):
+- Na API, `id` da conversa = número exibido na tela (display_id). O CSAT usa o mesmo número em `conversation_id`.
+- Datas das conversas e do CSAT vêm em unix (segundos).
+- Rack::Attack ativo: 3000 req/min por IP (o sync faz pausa entre páginas). Cloudflare na frente.
+- Já existe o webhook "IA Guta" na conta 3; o da auditoria é um segundo webhook, independente.
+
+## Instalação
+
+1. **Código**: clonar dentro da pasta web (`.../code/auditoria_suporte`).
+   O Apache precisa de `AllowOverride All` (ou `AuthConfig`) nessa pasta para os `.htaccess` valerem.
+2. **Banco**:
+   ```bash
+   sudo -u postgres psql -c "CREATE ROLE auditoria_app LOGIN PASSWORD 'TROQUE';"
+   sudo -u postgres psql -c "CREATE DATABASE auditoria_suporte OWNER auditoria_app;"
+   psql -h 127.0.0.1 -U auditoria_app -d auditoria_suporte -f sql/01_schema.sql
+   ```
+   Ajustar `auditoria.config`: `italk_url`, `csat_nota_corte`, `csat_inicio`, `rastreio_inicio` (= dia em que o webhook for ligado).
+3. **Config**: `cp config/config.example.php config/config.php` → preencher; `webhook_token` com `openssl rand -hex 24`; `chmod 640`.
+4. **Primeira carga**: `php bin/sync_api.php` (busca desde `carga_inicio`).
+5. **Cron**: `*/15 * * * * php /CAMINHO/auditoria_suporte/bin/sync_api.php >> /var/log/auditoria_sync.log 2>&1`
+6. **Conferir segurança** (obrigatório antes de cadastrar o webhook):
+   ```bash
+   curl -I https://SEU-SERVIDOR/auditoria_suporte/config/config.php   # 403
+   curl -I https://SEU-SERVIDOR/auditoria_suporte/src/lib.php         # 403
+   curl -X POST "https://SEU-SERVIDOR/auditoria_suporte/public/webhook.php?token=TOKEN" -d '{}'   # {"ok":true}
+   curl -X POST "https://SEU-SERVIDOR/auditoria_suporte/public/webhook.php?token=errado" -d '{}'  # 403
+   ```
+7. **Webhook** (no servidor do iTalk, via API ou tela Configurações → Integrações → Webhooks da conta 3):
+   ```bash
+   curl -s -X POST -H "api_access_token: TOKEN" -H "Content-Type: application/json" \
+     "https://ITALK/api/v1/accounts/3/webhooks" \
+     -d '{"webhook":{"url":"https://SEU-SERVIDOR/auditoria_suporte/public/webhook.php?token=WEBHOOK_TOKEN","subscriptions":["conversation_created","conversation_status_changed","conversation_updated"]}}'
+   ```
+   Conferir: `SELECT * FROM auditoria.webhook_eventos ORDER BY id DESC LIMIT 5;`
+8. **Metabase** (usuário `metabase_auditoria`, ver fim do `sql/01_schema.sql`):
+   - **Auditor resolução** → `auditoria.vw_indicador_resolucao_semanal`
+   - Detalhe por atendente/time/caixa → `auditoria.vw_conversas`
+   - **Fila CSAT** → Model sobre `auditoria.csat_auditoria` + *Model actions* (Update: `status, classificacao, observacao, supervisor, avaliado_em`). Metabase ≥ 46.
+   - **E-mail pós-vendas** → pergunta em `auditoria.vw_csat_fila` com `status = 'avaliado'` da semana anterior + *Subscription* semanal.
+
+## Indicador
+
+| Coluna | Cálculo | Vale para |
+|---|---|---|
+| `pct_resolvidas` | resolvidas / total | todo o histórico |
+| `pct_resolucao_conversa` | resolvidas **sem reabrir** / total | conversas criadas após ligar o webhook |
+
+Reabertura = evento `open` logo após um `resolved` (vindo do webhook). A API não guarda histórico de status.
+
+## Pendências com o Marcelo
+- Definição de "resolvido na conversa" (sem reabrir? sem escalar? resolvido pela Guta?)
+- Nota de corte do CSAT (≤2 ou ≤3)
+- Supervisor por time ou geral; prazo semanal
+- Pós-vendas só recebe ou também registra o tratamento
+
+## Próximas fases
+- Tela PHP própria para o supervisor (no lugar do Actions do Metabase)
+- Marcar `enviado_em` automaticamente; retorno do pós-vendas
+- Indicador de resolução da Guta (IA)
+- Validar assinatura do webhook (secret do Chatwoot) além do token na URL
