@@ -55,7 +55,7 @@ table.rank .ini{width:28px;height:28px;border-radius:50%;background:var(--linha-
 </style>
 
 <?php if ($rank): ?>
-<section class="destaques" aria-label="Destaques do período">
+<section class="destaques" aria-label="Destaques do período" data-tour="1" data-tour-titulo="Destaques do período" data-tour-texto="Quem atendeu mais, quem tem o melhor CSAT, quem responde mais rápido e quem concentra mais notas baixas. Clique para aprofundar.">
   <?php foreach ($cards as $c): if (!$c[1]) continue; $r = $c[1]; $nome = $r['atendente'] ? $r['atendente'] : '#' . $r['id']; ?>
     <a class="dest <?= $c[3] ?>" href="<?= h($c[3] === 'alerta' ? url(array('p' => 'fila', 'atendente' => $r['id'], 'semana' => 'todas')) : url(array('p' => 'visao', 'atendente' => $r['id']))) ?>">
       <span class="av"><?= h(mb_substr_compat($nome)) ?></span>
@@ -65,7 +65,7 @@ table.rank .ini{width:28px;height:28px;border-radius:50%;background:var(--linha-
 </section>
 <?php endif; ?>
 
-<div class="painel">
+<div class="painel" data-tour="2" data-tour-titulo="Desempenho por atendente" data-tour-texto="Clique no título de qualquer coluna para ordenar. O nome abre o diagnóstico daquela pessoa; o número de notas baixas abre a auditoria dela.">
   <h3>Desempenho por atendente</h3>
   <p class="leg">Conversas atribuídas no período e CSAT das conversas atendidas. Ordene pelas colunas; o nome abre o diagnóstico daquela pessoa.</p>
   <?php if ($rank): ?>

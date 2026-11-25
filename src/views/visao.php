@@ -87,12 +87,12 @@ $lacuna = array(
 </style>
 
 <section class="diag" aria-label="Diagnóstico do período">
-  <div class="diag-texto">
+  <div class="diag-texto" data-tour="1" data-tour-titulo="Diagnóstico em uma frase" data-tour-texto="Resumo do período escrito automaticamente a partir dos dados: volume, encerramento e o principal motivo das notas baixas.">
     <p class="frase"><?= h($DIAG_1) ?></p>
     <p class="frase"><?= h($DIAG_2) ?></p>
     <?php if ($DIAG_NOTAS): ?><ul><?php foreach ($DIAG_NOTAS as $n): ?><li><?= h($n) ?></li><?php endforeach; ?></ul><?php endif; ?>
   </div>
-  <div class="lacuna">
+  <div class="lacuna" data-tour="2" data-tour-titulo="Encerrar não é resolver" data-tour-texto="Compara o que o sistema marca como resolvido com o que o cliente realmente aprova. Essa diferença é o que a auditoria quer reduzir.">
     <h2>Do encerramento à satisfação</h2>
     <?php foreach ($lacuna as $l): ?>
       <div class="linha <?= $l[3] ?>">
@@ -107,7 +107,7 @@ $lacuna = array(
   </div>
 </section>
 
-<section class="faixa" aria-label="Indicadores">
+<section class="faixa" aria-label="Indicadores" data-tour="3" data-tour-titulo="Indicadores do período" data-tour-texto="Cada número traz a variação em relação ao período anterior e a tendência no minigráfico. Passe o mouse no ? para ver como é calculado.">
   <div class="ind">
     <div class="rot">Conversas</div>
     <div class="val"><?= num($kc['conversas']) ?></div>
@@ -150,7 +150,7 @@ $lacuna = array(
     <div class="graf"><canvas id="gResolucao" role="img" aria-label="Taxa de resolução"></canvas></div>
   </div>
 
-  <div class="painel c7">
+  <div class="painel c7" data-tour="5" data-tour-titulo="Quando o suporte é procurado" data-tour-texto="Mapa de calor por dia e hora. Ajuda a dimensionar a equipe nos horários de pico. Passe o mouse em cada quadrado.">
     <h3>Quando o suporte é procurado</h3><p class="leg">Conversas abertas por dia da semana e hora</p>
     <?php if ($maxCalor):
         $dias  = array(1 => 'Seg', 2 => 'Ter', 3 => 'Qua', 4 => 'Qui', 5 => 'Sex', 6 => 'Sáb', 7 => 'Dom');
@@ -199,7 +199,7 @@ $lacuna = array(
   <p>Cada conversa com nota até <?= (int)$corte ?> é lida pela IA, que aponta o motivo e o responsável.</p>
 </div>
 <div class="grade">
-  <div class="painel c5">
+  <div class="painel c5" data-tour="6" data-tour-titulo="O que dizem as notas baixas" data-tour-texto="A IA lê cada conversa com nota baixa e aponta o motivo e quem é o responsável: atendimento, produto, processo ou o próprio cliente.">
     <h3>Motivos</h3><p class="leg">Categoria atribuída pela IA</p>
     <?php if ($iaCat): $mx = (int)$iaCat[0]['n']; ?>
       <div class="hbar">
@@ -217,7 +217,7 @@ $lacuna = array(
       <?php endif; ?>
     <?php else: ?><div class="vazio">Nenhuma nota baixa analisada no período.</div><?php endif; ?>
   </div>
-  <div class="painel c7">
+  <div class="painel c7" data-tour="7" data-tour-titulo="Casos mais graves" data-tour-texto="Os atendimentos que mais pedem atenção. Clique em Abrir caso para ver a análise completa e registrar a avaliação.">
     <h3>Casos mais graves</h3><p class="leg">Leitura da IA sobre cada atendimento. A avaliação final é do supervisor.</p>
     <?php if ($analises): foreach ($analises as $a): ?>
       <div class="caso">

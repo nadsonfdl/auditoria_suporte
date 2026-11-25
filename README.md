@@ -121,6 +121,12 @@ Alterações de banco novas = novo arquivo `sql/NN_descricao.sql`. Nunca editar 
 
 Filtros: 7/30/90 dias, tudo ou datas livres; atendente, time e caixa de entrada.
 
+Recursos de uso:
+- **Tour guiado** em cada tela (abre sozinho na primeira visita; botão "Tour guiado" ou tecla **T**; setas e Esc navegam).
+- **Modo apresentação** em tela cheia, sem barra lateral e filtros (botão "Apresentar" ou tecla **A**; Esc sai).
+- **Imprimir / salvar em PDF** com layout próprio para A4 paisagem.
+- Animações sutis só na entrada da página (números contam, barras crescem); desligadas para quem usa "reduzir movimento".
+
 Criar usuário:
 ```bash
 php bin/criar_usuario.php marcelo 'SenhaForte123'   # cola a linha gerada em 'painel_usuarios' no config/config.php

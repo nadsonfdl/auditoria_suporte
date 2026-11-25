@@ -56,7 +56,7 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
 .avaliacao .quem-av{font-size:12.5px;color:var(--tinta-3)}
 </style>
 
-<section class="resumo-fila">
+<section class="resumo-fila" data-tour="1" data-tour-titulo="A fila da semana" data-tour-texto="Escolha a semana e a situação. A barra mostra quantas notas baixas o supervisor já avaliou.">
   <div>
     <div class="sel">
       <select class="campo" onchange="location.href=this.value" aria-label="Semana">
@@ -79,7 +79,7 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
     </div>
     <?php endif; ?>
   </div>
-  <div class="acoes">
+  <div class="acoes" data-tour="4" data-tour-titulo="Envio ao pós-vendas" data-tour-texto="Baixe as notas avaliadas em planilha e marque a semana como enviada. Tudo fica registrado com data e responsável.">
     <a class="btn" href="<?= h(url(array('csv' => 1, 'status' => 'avaliado'))) ?>">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg>Baixar avaliadas (CSV)</a>
     <?php if ($semSel !== '' && $contagem['avaliado']): ?>
@@ -95,7 +95,7 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
   <div class="painel"><div class="vazio"><?= $stSel === 'pendente' ? 'Nenhuma nota aguardando avaliação. A fila está em dia.' : 'Nenhuma nota com esses filtros. Escolha outra semana ou situação.' ?></div></div>
 <?php endif; ?>
 
-<?php foreach ($itens as $it): ?>
+<?php $primeiro = true; foreach ($itens as $it): ?>
 <article class="item" id="item-<?= (int)$it['id'] ?>">
   <header class="item-cab">
     <div class="nota n<?= (int)$it['nota'] ?>" title="Nota <?= (int)$it['nota'] ?>"><?= (int)$it['nota'] ?></div>
@@ -110,7 +110,7 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
     </div>
   </header>
   <div class="item-corpo">
-    <div class="analise">
+    <div class="analise"<?= $primeiro ? ' data-tour="2" data-tour-titulo="O que o cliente disse e o que a IA leu" data-tour-texto="O comentário do cliente vem primeiro. Abaixo, a leitura da IA sobre a conversa inteira: motivo, responsável, trechos que comprovam e uma sugestão."' : '' ?>>
       <?php if ($it['feedback_cliente']): ?>
         <blockquote class="citacao"><?= h($it['feedback_cliente']) ?></blockquote>
       <?php else: ?>
@@ -137,7 +137,7 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
         <p class="res">Esta conversa entra na próxima análise, que roda a cada 15 minutos.</p>
       <?php endif; ?>
     </div>
-    <form class="avaliacao" method="post">
+    <form class="avaliacao" method="post"<?= $primeiro ? ' data-tour="3" data-tour-titulo="A palavra final é do supervisor" data-tour-texto="A classificação já vem sugerida pela IA. O supervisor confirma ou corrige e escreve a observação para o pós-vendas."' : '' ?>>
       <input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><input type="hidden" name="acao" value="avaliar"><input type="hidden" name="id" value="<?= (int)$it['id'] ?>">
       <?php $cl = $it['classificacao'] ? $it['classificacao'] : $it['ia_categoria']; ?>
       <label for="c<?= (int)$it['id'] ?>">Classificação</label>
@@ -156,4 +156,4 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
     </form>
   </div>
 </article>
-<?php endforeach; ?>
+<?php $primeiro = false; endforeach; ?>
