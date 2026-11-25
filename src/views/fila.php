@@ -11,26 +11,26 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
 .resumo-fila .prog .txt{display:flex;justify-content:space-between;font-size:13px;color:var(--tinta-2);margin-bottom:6px}
 .resumo-fila .prog .txt b{color:var(--tinta)}
 .resumo-fila .trilho{height:8px;background:var(--linha-2);border-radius:4px;overflow:hidden}
-.resumo-fila .trilho i{display:block;height:100%;background:var(--verde);border-radius:4px}
+.resumo-fila .trilho i{display:block;height:100%;background:var(--pri);border-radius:4px}
 .resumo-fila .acoes{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
-.chip{padding:6px 12px;border-radius:999px;border:1px solid #d3dbd8;background:#fff;color:var(--tinta-2);font-size:13px;font-weight:500;text-decoration:none;display:inline-flex;gap:6px}
-.chip:hover{border-color:#b5c2be;color:var(--tinta)}
+.chip{padding:6px 12px;border-radius:999px;border:1px solid #d3dae5;background:#fff;color:var(--tinta-2);font-size:13px;font-weight:500;text-decoration:none;display:inline-flex;gap:6px}
+.chip:hover{border-color:#b4bfce;color:var(--tinta)}
 .chip.on{background:var(--tinta);border-color:var(--tinta);color:#fff}
 .chip .q{font-variant-numeric:tabular-nums;opacity:.75}
 @media (max-width:900px){.resumo-fila{grid-template-columns:1fr}.resumo-fila .acoes{justify-content:flex-start}}
 
 .item{background:var(--cartao);border:1px solid var(--linha);border-radius:12px;margin-bottom:14px;overflow:hidden;scroll-margin-top:20px}
-.item:target{border-color:var(--verde);box-shadow:0 0 0 3px var(--verde-claro)}
+.item:target{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-claro)}
 .item-cab{display:flex;gap:14px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--linha-2);flex-wrap:wrap}
 .item-cab .quem b{display:block;font-weight:600;font-size:14.5px}
 .item-cab .quem span{color:var(--tinta-3);font-size:12.5px}
 .item-cab .dir{margin-left:auto;display:flex;gap:10px;align-items:center}
 .estado{font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;color:var(--tinta-2)}
-.estado::before{content:"";width:8px;height:8px;border-radius:50%;background:#b5bfbc}
+.estado::before{content:"";width:8px;height:8px;border-radius:50%;background:#b4bdcb}
 .estado.pendente{color:var(--ambar)}.estado.pendente::before{background:#d99a2b}
-.estado.avaliado::before{background:var(--verde)}
-.estado.enviado,.estado.tratado{color:var(--verde-2)}.estado.enviado::before,.estado.tratado::before{background:var(--verde-2)}
+.estado.avaliado::before{background:var(--pri)}
+.estado.enviado,.estado.tratado{color:var(--pri-2)}.estado.enviado::before,.estado.tratado::before{background:var(--pri-2)}
 .item-corpo{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr)}
 @media (max-width:1000px){.item-corpo{grid-template-columns:1fr}}
 .analise{padding:18px 20px 20px}
@@ -42,16 +42,16 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
 .analise .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .analise p.res{margin:0 0 12px;color:var(--tinta-2);line-height:1.6;max-width:70ch}
 .evid{margin:0 0 14px;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
-.evid li{font-size:13px;color:var(--tinta-2);background:#f6f8f7;border-radius:7px;padding:7px 11px;font-family:var(--serif);font-style:italic}
+.evid li{font-size:13px;color:var(--tinta-2);background:#f5f7fb;border-radius:7px;padding:7px 11px;font-family:var(--serif);font-style:italic}
 .sugestao{background:var(--violeta-claro);border-radius:9px;padding:11px 14px;font-size:13.5px;color:#3a2e8f;line-height:1.5}
 .sugestao b{font-weight:600}
-.avaliacao{padding:18px 20px 20px;background:#f9fbfa;border-left:1px solid var(--linha-2);display:flex;flex-direction:column}
+.avaliacao{padding:18px 20px 20px;background:#f9fafd;border-left:1px solid var(--linha-2);display:flex;flex-direction:column}
 @media (max-width:1000px){.avaliacao{border-left:0;border-top:1px solid var(--linha-2)}}
 .avaliacao label{display:block;font-size:12.5px;font-weight:500;color:var(--tinta-2);margin:0 0 6px}
-.avaliacao select,.avaliacao textarea{width:100%;font:inherit;font-size:13.5px;color:var(--tinta);border:1px solid #d3dbd8;border-radius:8px;background:#fff;padding:9px 11px}
+.avaliacao select,.avaliacao textarea{width:100%;font:inherit;font-size:13.5px;color:var(--tinta);border:1px solid #d3dae5;border-radius:8px;background:#fff;padding:9px 11px}
 .avaliacao select{margin-bottom:14px;padding:9px 30px 9px 11px}
 .avaliacao textarea{min-height:110px;resize:vertical;margin-bottom:12px;line-height:1.5}
-.avaliacao select:focus,.avaliacao textarea:focus{outline:3px solid var(--verde-foco);border-color:var(--verde)}
+.avaliacao select:focus,.avaliacao textarea:focus{outline:3px solid var(--pri-foco);border-color:var(--pri)}
 .avaliacao .rodape-av{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .avaliacao .quem-av{font-size:12.5px;color:var(--tinta-3)}
 </style>

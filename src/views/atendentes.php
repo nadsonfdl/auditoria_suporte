@@ -25,8 +25,8 @@ $cards = array(
 <style>
 .destaques{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:16px}
 .dest{background:var(--cartao);border:1px solid var(--linha);border-radius:12px;padding:16px 18px;display:flex;gap:13px;align-items:center;text-decoration:none;color:inherit}
-.dest:hover{border-color:#c7d0cd}
-.dest .av{width:40px;height:40px;border-radius:50%;background:var(--verde-claro);color:var(--verde-2);display:grid;place-items:center;font-weight:600;font-size:16px;flex:none}
+.dest:hover{border-color:#c6cfdc}
+.dest .av{width:40px;height:40px;border-radius:50%;background:var(--pri-claro);color:var(--pri-2);display:grid;place-items:center;font-weight:600;font-size:16px;flex:none}
 .dest.alerta .av{background:var(--vermelho-claro);color:var(--vermelho-2)}
 .dest small{display:block;color:var(--tinta-3);font-size:12px}
 .dest b{display:block;font-size:15.5px;font-weight:600;line-height:1.3}
@@ -37,20 +37,20 @@ table.rank{width:100%;border-collapse:collapse;font-size:13.5px}
 table.rank th{text-align:left;font-weight:500;color:var(--tinta-3);font-size:12.5px;padding:0 12px 10px;border-bottom:1px solid var(--linha);white-space:nowrap}
 table.rank th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
 table.rank th button:hover{color:var(--tinta)}
-table.rank th button:focus-visible{outline:3px solid var(--verde-foco);border-radius:4px}
+table.rank th button:focus-visible{outline:3px solid var(--pri-foco);border-radius:4px}
 table.rank th[aria-sort] button{color:var(--tinta)}
 table.rank th.n,table.rank td.n{text-align:right}
 table.rank td{padding:12px 12px;border-bottom:1px solid var(--linha-2);font-variant-numeric:tabular-nums;vertical-align:middle}
-table.rank tbody tr:hover td{background:#f9fbfa}
+table.rank tbody tr:hover td{background:#f9fafd}
 table.rank td.nome a{color:var(--tinta);font-weight:600;text-decoration:none;display:flex;align-items:center;gap:10px}
-table.rank td.nome a:hover{color:var(--verde-2)}
+table.rank td.nome a:hover{color:var(--pri-2)}
 table.rank .ini{width:28px;height:28px;border-radius:50%;background:var(--linha-2);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--tinta-2);flex:none}
 .vol{display:flex;align-items:center;gap:10px;justify-content:flex-end}
-.vol i{display:block;height:6px;border-radius:3px;background:var(--verde);opacity:.85}
+.vol i{display:block;height:6px;border-radius:3px;background:var(--pri);opacity:.85}
 .nota-media{display:inline-flex;align-items:center;gap:7px;font-weight:600}
-.nota-media::before{content:"";width:8px;height:8px;border-radius:50%;background:#b5bfbc}
-.nota-media.alta::before{background:var(--verde)}.nota-media.baixa::before{background:var(--vermelho)}
-.zero{color:#b5bfbc}
+.nota-media::before{content:"";width:8px;height:8px;border-radius:50%;background:#b4bdcb}
+.nota-media.alta::before{background:var(--pri)}.nota-media.baixa::before{background:var(--vermelho)}
+.zero{color:#b4bdcb}
 .baixas a{color:var(--vermelho-2);font-weight:600;text-decoration:none}.baixas a:hover{text-decoration:underline}
 </style>
 
