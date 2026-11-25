@@ -19,6 +19,15 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
 .chip.on{background:var(--tinta);border-color:var(--tinta);color:#fff}
 .chip .q{font-variant-numeric:tabular-nums;opacity:.75}
 @media (max-width:900px){.resumo-fila{grid-template-columns:1fr}.resumo-fila .acoes{justify-content:flex-start}}
+.resumo-fila .pv{margin-top:10px;font-size:13px;color:var(--tinta-2)}
+.nota.ia{background:var(--violeta);font-size:12px}
+.retorno{padding:14px 20px 16px;border-top:1px solid var(--linha-2);background:#f6f9fe}
+.retorno label{display:block;font-size:12.5px;font-weight:500;color:var(--tinta-2);margin-bottom:6px}
+.retorno .ret-linha{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.retorno textarea{flex:1;min-width:260px;font:inherit;font-size:13.5px;border:1px solid #d3dae5;border-radius:8px;padding:8px 11px;resize:vertical}
+.retorno .ret-acoes{display:flex;gap:12px;align-items:center}
+.retorno .chk{display:inline-flex;gap:6px;align-items:center;margin:0;font-size:13.5px;color:var(--tinta)}
+.retorno small{display:block;margin-top:6px;color:var(--tinta-3);font-size:12px}
 
 .item{background:var(--cartao);border:1px solid var(--linha);border-radius:12px;margin-bottom:14px;overflow:hidden;scroll-margin-top:20px}
 .item:target{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-claro)}
@@ -74,18 +83,21 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
     </div>
     <?php if ($total): ?>
     <div class="prog">
-      <div class="txt"><span><b><?= $avaliados ?> de <?= $total ?></b> notas avaliadas <?= $semSel ? 'nesta semana' : 'no total' ?></span><span><?= $progresso ?>%</span></div>
+      <div class="txt"><span class="cab-painel"><b><?= $avaliados ?> de <?= $total ?></b>&nbsp;avaliadas <?= $semSel ? 'nesta semana' : 'no total' ?> <?= explica('fila') ?></span><span><?= $progresso ?>%</span></div>
       <div class="trilho"><i style="width:<?= $progresso ?>%"></i></div>
     </div>
+    <?php endif; ?>
+    <?php if ((int)$KPV['enviados']): ?>
+    <div class="pv cab-painel">Pós-vendas: <b><?= num($KPV['tratados']) ?> de <?= num($KPV['enviados']) ?></b>&nbsp;casos tratados<?= $KPV['horas_ate_tratar'] !== null ? ', em ' . duracao(60 * (float)$KPV['horas_ate_tratar']) . ' (mediana)' : '' ?> <?= explica('posvendas') ?></div>
     <?php endif; ?>
   </div>
   <div class="acoes" data-tour="4" data-tour-titulo="Envio ao pós-vendas" data-tour-texto="Baixe as notas avaliadas em planilha e marque a semana como enviada. Tudo fica registrado com data e responsável.">
     <a class="btn" href="<?= h(url(array('csv' => 1, 'status' => 'avaliado'))) ?>">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg>Baixar avaliadas (CSV)</a>
     <?php if ($semSel !== '' && $contagem['avaliado']): ?>
-      <form method="post" onsubmit="return confirm('Marcar as <?= (int)$contagem['avaliado'] ?> notas avaliadas desta semana como enviadas ao pós-vendas?')">
+      <form method="post" onsubmit="return confirm('Enviar ao pós-vendas as <?= (int)$contagem['avaliado'] ?> notas avaliadas desta semana?')">
         <input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><input type="hidden" name="acao" value="enviar_semana"><input type="hidden" name="semana" value="<?= h($semSel) ?>">
-        <button class="btn pri" type="submit">Marcar semana como enviada</button>
+        <button class="btn pri" type="submit"><?= (listaDestinos(conf('posvendas_emails')) && smtpConfigurado()) ? 'Enviar ao pós-vendas por e-mail' : 'Marcar semana como enviada' ?></button>
       </form>
     <?php endif; ?>
   </div>
@@ -98,10 +110,11 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
 <?php $primeiro = true; foreach ($itens as $it): ?>
 <article class="item" id="item-<?= (int)$it['id'] ?>">
   <header class="item-cab">
-    <div class="nota n<?= (int)$it['nota'] ?>" title="Nota <?= (int)$it['nota'] ?>"><?= (int)$it['nota'] ?></div>
+    <?php if ($it['origem'] === 'ia'): ?><div class="nota ia" title="Sem nota do cliente: sinalizada pela auditoria por IA">IA</div>
+    <?php else: ?><div class="nota n<?= (int)$it['nota'] ?>" title="Nota <?= (int)$it['nota'] ?>"><?= (int)$it['nota'] ?></div><?php endif; ?>
     <div class="quem">
       <b><?= h($it['cliente'] ? $it['cliente'] : 'Cliente sem nome') ?></b>
-      <span>Atendida por <?= h($it['atendente'] ? $it['atendente'] : 'ninguém') ?>, avaliou em <?= date('d/m/Y \à\s H:i', strtotime($it['respondido_em'])) ?></span>
+      <span>Atendida por <?= h($it['atendente'] ? $it['atendente'] : 'ninguém') ?>, <?= $it['origem'] === 'ia' ? 'conversa de' : 'avaliou em' ?> <?= date('d/m/Y \à\s H:i', strtotime($it['respondido_em'])) ?></span>
     </div>
     <div class="dir">
       <span class="estado <?= h($it['status']) ?>"><?= h($ROT_STATUS[$it['status']]) ?></span>
@@ -111,7 +124,9 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
   </header>
   <div class="item-corpo">
     <div class="analise"<?= $primeiro ? ' data-tour="2" data-tour-titulo="O que o cliente disse e o que a IA leu" data-tour-texto="O comentário do cliente vem primeiro. Abaixo, a leitura da IA sobre a conversa inteira: motivo, responsável, trechos que comprovam e uma sugestão."' : '' ?>>
-      <?php if ($it['feedback_cliente']): ?>
+      <?php if ($it['origem'] === 'ia'): ?>
+        <p class="citacao sem">O cliente não avaliou. A auditoria por IA sinalizou esta conversa com risco alto de insatisfação.</p>
+      <?php elseif ($it['feedback_cliente']): ?>
         <blockquote class="citacao"><?= h($it['feedback_cliente']) ?></blockquote>
       <?php else: ?>
         <p class="citacao sem">O cliente não deixou comentário.</p>
@@ -155,5 +170,19 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
       </div>
     </form>
   </div>
+  <?php if ($it['status'] === 'enviado' || $it['status'] === 'tratado'): ?>
+  <form class="retorno" method="post">
+    <input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><input type="hidden" name="acao" value="retorno"><input type="hidden" name="id" value="<?= (int)$it['id'] ?>">
+    <label for="r<?= (int)$it['id'] ?>">Retorno do pós-vendas</label>
+    <div class="ret-linha">
+      <textarea id="r<?= (int)$it['id'] ?>" name="retorno" rows="2" placeholder="O que foi feito com o cliente"><?= h($it['retorno_posvendas']) ?></textarea>
+      <div class="ret-acoes">
+        <label class="chk"><input type="checkbox" name="tratado" value="1" <?= $it['status'] === 'tratado' ? 'checked' : '' ?>> Caso tratado</label>
+        <button class="btn" type="submit">Salvar retorno</button>
+      </div>
+    </div>
+    <?php if ($it['tratado_em']): ?><small>Tratado por <?= h(ucfirst($it['tratado_por'])) ?> em <?= date('d/m \à\s H:i', strtotime($it['tratado_em'])) ?></small><?php endif; ?>
+  </form>
+  <?php endif; ?>
 </article>
 <?php $primeiro = false; endforeach; ?>

@@ -3,7 +3,7 @@
 -- =====================================================================
 
 -- 1 linha por conversa, com tudo que o painel filtra/agrega
-DROP VIEW IF EXISTS auditoria.vw_painel_conversas;
+DROP VIEW IF EXISTS auditoria.vw_painel_conversas CASCADE;  -- recriadas por 03 e 05
 CREATE VIEW auditoria.vw_painel_conversas AS
 SELECT c.id                                                        AS conversa,
        c.created_at AT TIME ZONE 'America/Sao_Paulo'               AS criada_em,
@@ -28,7 +28,7 @@ LEFT JOIN espelho.inboxes i ON i.id = c.inbox_id
 LEFT JOIN auditoria.vw_status_conversa s ON s.conversation_id = c.id;
 
 -- 1 linha por resposta de CSAT, já com a análise da IA quando for nota baixa
-DROP VIEW IF EXISTS auditoria.vw_painel_csat;
+DROP VIEW IF EXISTS auditoria.vw_painel_csat CASCADE;
 CREATE VIEW auditoria.vw_painel_csat AS
 SELECT s.id, s.conversation_id AS conversa, s.rating AS nota, s.feedback_message AS comentario,
        s.created_at AT TIME ZONE 'America/Sao_Paulo'                           AS respondido_em,

@@ -66,7 +66,7 @@ table.rank .ini{width:28px;height:28px;border-radius:50%;background:var(--linha-
 <?php endif; ?>
 
 <div class="painel" data-tour="2" data-tour-titulo="Desempenho por atendente" data-tour-texto="Clique no título de qualquer coluna para ordenar. O nome abre o diagnóstico daquela pessoa; o número de notas baixas abre a auditoria dela.">
-  <h3>Desempenho por atendente</h3>
+  <h3 class="cab-painel">Desempenho por atendente <?= explica('rank') ?></h3>
   <p class="leg">Conversas atribuídas no período e CSAT das conversas atendidas. Ordene pelas colunas; o nome abre o diagnóstico daquela pessoa.</p>
   <?php if ($rank): ?>
   <div style="overflow-x:auto">
@@ -80,6 +80,8 @@ table.rank .ini{width:28px;height:28px;border-radius:50%;background:var(--linha-
       <th class="n" data-t="n"><button type="button">Avaliações</button></th>
       <th class="n" data-t="n"><button type="button">CSAT</button></th>
       <th class="n" data-t="n"><button type="button">Notas baixas</button></th>
+      <th class="n" data-t="n"><button type="button" title="Nota de qualidade dada pela IA, de 0 a 100">Qualidade (IA)</button></th>
+      <th class="n" data-t="n"><button type="button" title="Conversas que a IA confirmou como resolvidas">Resolvidas de fato</button></th>
       <th data-t="s"><button type="button">Motivo mais comum</button></th>
     </tr></thead>
     <tbody>
@@ -95,6 +97,9 @@ table.rank .ini{width:28px;height:28px;border-radius:50%;background:var(--linha-
           <?php if ($r['media'] !== null): $m = (float)$r['media']; ?><span class="nota-media <?= $m >= 4.5 ? 'alta' : ($m < 4 ? 'baixa' : '') ?>"><?= num($m, 2) ?></span><?php else: ?><span class="zero">—</span><?php endif; ?>
         </td>
         <td class="n baixas" data-v="<?= (int)$r['baixas'] ?>"><?php if ((int)$r['baixas']): ?><a href="<?= h(url(array('p' => 'fila', 'atendente' => $r['id'], 'semana' => 'todas'))) ?>"><?= num($r['baixas']) ?></a><?php else: ?><span class="zero">0</span><?php endif; ?></td>
+        <?php $qa = isset($qaAt[(int)$r['id']]) ? $qaAt[(int)$r['id']] : null; ?>
+        <td class="n" data-v="<?= $qa && $qa['nota_qa'] !== null ? (float)$qa['nota_qa'] : -1 ?>"><?= $qa && $qa['nota_qa'] !== null ? '<span class="nota-media ' . ((float)$qa['nota_qa'] >= (float)conf('meta_qa', '80') ? 'alta' : ((float)$qa['nota_qa'] < 60 ? 'baixa' : '')) . '">' . num($qa['nota_qa']) . '</span>' : '<span class="zero">—</span>' ?></td>
+        <td class="n" data-v="<?= $qa && $qa['pct_real'] !== null ? (float)$qa['pct_real'] : -1 ?>"><?= $qa && $qa['pct_real'] !== null ? num($qa['pct_real']) . '%' : '<span class="zero">—</span>' ?></td>
         <td data-v="<?= h(rotulo('CATEGORIAS', $r['motivo'])) ?>"><?= $r['motivo'] ? '<span class="tag cat">' . h(rotulo('CATEGORIAS', $r['motivo'])) . '</span>' : '<span class="zero">—</span>' ?></td>
       </tr>
     <?php endforeach; ?>

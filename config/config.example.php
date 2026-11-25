@@ -27,4 +27,6 @@ return [
     'painel_usuarios' => array(
         // 'marcelo' => '$2y$10$...',
     ),
+    // Quem pode abrir a aba Configurações. Vazio = todos os usuários do painel.
+    'painel_admins' => array('marcelo', 'nadson'),
 ];

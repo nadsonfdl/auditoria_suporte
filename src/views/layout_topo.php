@@ -1,11 +1,18 @@
 <?php
-$TITULOS = array('visao' => 'Diagnóstico do suporte', 'atendentes' => 'Atendentes', 'fila' => 'Auditoria de notas baixas');
+$TITULOS = array('visao' => 'Diagnóstico do suporte', 'qualidade' => 'Qualidade dos atendimentos', 'atendentes' => 'Atendentes',
+                 'fila' => 'Auditoria de notas baixas', 'config' => 'Configurações');
 $sync = ultimaSync();
 $icone = array(
     'visao'      => '<path d="M3 12h4l2-6 4 12 2-6h6"/>',
     'atendentes' => '<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.8-3 3-4.6 5.5-4.6s4.7 1.6 5.5 4.6"/><path d="M16 5.2a3 3 0 0 1 0 5.6M18.5 19c-.3-1.6-1-2.8-2-3.7"/>',
     'fila'       => '<path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-2"/><path d="m9 13 2 2 4-4"/>',
+    'qualidade'  => '<path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5L12 14.5 7.5 16.8l.9-5L4.8 8.3l5-.7z"/>',
+    'config'     => '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
 );
+$NAV = array('visao' => 'Diagnóstico', 'qualidade' => 'Qualidade (IA)', 'atendentes' => 'Atendentes', 'fila' => 'Auditoria CSAT');
+if ($ADMIN) {
+    $NAV['config'] = 'Configurações';
+}
 ?><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -171,6 +178,33 @@ body.apresentar .sair-apresentacao{display:inline-flex}
   a{color:inherit;text-decoration:none}
 }
 
+/* ---------- toast de erro (fica até fechar) ---------- */
+.toast{max-width:min(520px,calc(100vw - 48px))}
+.toast.erro{background:#7a1f19;animation:toastIn .35s cubic-bezier(.2,.7,.2,1)}
+.toast.erro svg{color:#ffb4ae}
+.toast .fechar-toast{background:none;border:0;color:inherit;opacity:.7;font-size:18px;cursor:pointer;margin-left:6px;padding:0 4px}
+.toast .fechar-toast:hover{opacity:1}
+
+/* ---------- explicação de indicadores ---------- */
+.explica{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid #c6cfdc;background:#fff;color:var(--tinta-3);font:600 11px var(--serif);font-style:italic;cursor:pointer;padding:0;vertical-align:middle;margin-left:4px;transition:all .15s}
+.explica:hover,.explica[aria-expanded=true]{border-color:var(--pri);color:var(--pri);background:var(--pri-claro)}
+.cab-painel{display:flex;align-items:center;gap:4px}
+.explica-pop{position:fixed;z-index:70;width:min(380px,calc(100vw - 24px));background:#fff;border:1px solid var(--linha);border-radius:12px;box-shadow:0 18px 48px -14px rgba(15,29,51,.35);padding:16px 18px;font-size:13.5px;line-height:1.55;color:var(--tinta-2);animation:popIn .18s ease}
+@keyframes popIn{from{opacity:0;transform:translateY(-4px)}}
+.explica-pop h5{font-family:var(--serif);font-weight:500;font-size:17px;color:var(--tinta);margin:0 0 8px}
+.explica-pop dl{margin:0;display:grid;gap:8px}
+.explica-pop dt{font-weight:600;color:var(--tinta);font-size:12.5px}
+.explica-pop dd{margin:0}
+.explica-pop .ref{margin-top:10px;padding-top:10px;border-top:1px solid var(--linha-2);font-size:12.5px;color:var(--tinta-3)}
+.explica-pop .x{position:absolute;top:8px;right:10px;background:none;border:0;font-size:18px;color:var(--tinta-3);cursor:pointer}
+
+/* ---------- semáforo de metas ---------- */
+.meta{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;color:var(--tinta-3);white-space:nowrap}
+.meta::before{content:"";width:8px;height:8px;border-radius:50%;background:#b4bdcb}
+.meta.ok{color:#0a6b3c}.meta.ok::before{background:#0aac23}
+.meta.atencao{color:#8a5a00}.meta.atencao::before{background:#fbb315}
+.meta.fora{color:var(--vermelho-2)}.meta.fora::before{background:#dc3c3d}
+
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -182,8 +216,8 @@ body.apresentar .sair-apresentacao{display:inline-flex}
     <span class="sel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg></span>
     <span><b>Auditoria do Suporte</b><small>iTalk, conta Suporte</small></span>
   </a>
-  <nav class="nav" aria-label="Seções" data-tour="8" data-tour-titulo="Três visões" data-tour-texto="Diagnóstico para a visão geral, Atendentes para o desempenho de cada pessoa e Auditoria CSAT para o trabalho semanal do supervisor.">
-    <?php foreach (array('visao' => 'Diagnóstico', 'atendentes' => 'Atendentes', 'fila' => 'Auditoria CSAT') as $k => $v): ?>
+  <nav class="nav" aria-label="Seções" data-tour="20" data-tour-titulo="As telas do painel" data-tour-texto="Diagnóstico para a visão geral, Qualidade para a auditoria de todas as conversas pela IA, Atendentes para cada pessoa, Auditoria CSAT para o trabalho semanal do supervisor e Configurações para ligar envios e metas.">
+    <?php foreach ($NAV as $k => $v): ?>
       <a href="<?= h(url(array('p' => $k), $k === 'fila' ? array() : array('semana', 'status'))) ?>" class="<?= $pagina === $k ? 'ativa' : '' ?>" <?= $pagina === $k ? 'aria-current="page"' : '' ?>>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><?= $icone[$k] ?></svg>
         <?= $v ?>
@@ -201,12 +235,16 @@ body.apresentar .sair-apresentacao{display:inline-flex}
   <header class="cabeca">
     <div>
       <h1><?= h($TITULOS[$pagina]) ?></h1>
-      <div class="periodo"><?= $pagina === 'fila' ? 'Notas de 1 a ' . (int)$corte . ' para o supervisor avaliar e enviar ao pós-vendas' : h($PERIODO_CURTO) . ', de ' . date('d/m/Y', strtotime($F['ini'])) . ' a ' . date('d/m/Y', strtotime($F['fim'])) ?></div>
+      <div class="periodo"><?php
+        if ($pagina === 'fila') echo 'Notas de 1 a ' . (int)$corte . ' e conversas em risco apontadas pela IA, para o supervisor avaliar e enviar ao pós-vendas';
+        elseif ($pagina === 'config') echo 'O que está ligado, quem recebe e como cada envio funciona';
+        else echo h($PERIODO_CURTO) . ', de ' . date('d/m/Y', strtotime($F['ini'])) . ' a ' . date('d/m/Y', strtotime($F['fim']));
+      ?></div>
     </div>
     <div class="ferramentas">
       <button type="button" class="btn" id="btTour" title="Conhecer esta tela (atalho: T)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.2-2.5 3.6"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>Tour guiado</button>
-      <?php if ($pagina !== 'fila'): ?>
+      <?php if ($pagina !== 'fila' && $pagina !== 'config'): ?>
       <button type="button" class="btn" id="btApresentar" title="Tela cheia para reuniões (atalho: A)">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>Apresentar</button>
       <?php endif; ?>
@@ -215,6 +253,7 @@ body.apresentar .sair-apresentacao{display:inline-flex}
     </div>
   </header>
 
+  <?php if ($pagina !== 'config'): ?>
   <form class="filtros" method="get" id="filtros" data-tour="4" data-tour-titulo="Filtre como quiser" data-tour-texto="Período, atendente, time e caixa de entrada. Todos os números e gráficos da tela se ajustam ao filtro.">
     <input type="hidden" name="p" value="<?= h($pagina) ?>">
     <?php if ($pagina !== 'fila'): ?>
@@ -247,5 +286,6 @@ body.apresentar .sair-apresentacao{display:inline-flex}
       <span class="comp">Comparado a <?= date('d/m', strtotime($F['ant_ini'])) ?>–<?= date('d/m', strtotime($F['ant_fim'])) ?></span>
     <?php endif; ?>
   </form>
+  <?php endif; ?>
 
-  <?php if ($flash): ?><div class="toast" role="status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg><?= h($flash) ?></div><?php endif; ?>
+  <?php if ($flash): ?><div class="toast <?= $flash[1] === 'erro' ? 'erro' : '' ?>" role="<?= $flash[1] === 'erro' ? 'alert' : 'status' ?>"><?php if ($flash[1] === 'erro'): ?><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg><?php else: ?><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m5 12 5 5 9-10"/></svg><?php endif; ?><span><?= h($flash[0]) ?></span><button type="button" class="fechar-toast" aria-label="Fechar" onclick="this.parentNode.remove()">×</button></div><?php endif; ?>

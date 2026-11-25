@@ -1,10 +1,12 @@
 
 </main>
 </div>
+<?php require __DIR__ . '/explicacoes.php'; ?>
 <script>
 (function () {
   'use strict';
   var PAGINA = <?= json_encode($pagina) ?>;
+  var EXPLICA = <?= json_encode($EXPLICA) ?>;
   var reduzir = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var guarda = {
     ler: function (k) { try { return window.localStorage.getItem(k); } catch (e) { return null; } },
@@ -53,6 +55,40 @@
       setTimeout(function () { requestAnimationFrame(passo); }, 180);
     });
   }
+
+  // ---------------------------------------------------------- explicação dos indicadores
+  var popEx = null, btEx = null;
+  function fecharExplica() {
+    if (popEx) { popEx.parentNode.removeChild(popEx); popEx = null; }
+    if (btEx) { btEx.setAttribute('aria-expanded', 'false'); btEx.focus({preventScroll: true}); btEx = null; }
+  }
+  function abrirExplica(bt) {
+    var e = EXPLICA[bt.getAttribute('data-explica')]; if (!e) return;
+    fecharExplica();
+    btEx = bt; bt.setAttribute('aria-expanded', 'true');
+    popEx = document.createElement('div'); popEx.className = 'explica-pop'; popEx.setAttribute('role', 'dialog'); popEx.setAttribute('aria-label', e.titulo);
+    var linha = function (rot, txt) { return txt ? '<dt>' + rot + '</dt><dd></dd>' : ''; };
+    popEx.innerHTML = '<button type="button" class="x" aria-label="Fechar">×</button><h5></h5><dl>'
+      + linha('O que é', e.o) + linha('Como é calculado', e.c) + linha('Como ler', e.l) + '</dl>' + (e.r ? '<div class="ref"></div>' : '');
+    popEx.querySelector('h5').textContent = e.titulo;
+    var dds = popEx.querySelectorAll('dd'), txts = [e.o, e.c, e.l].filter(Boolean);
+    for (var k = 0; k < dds.length; k++) dds[k].textContent = txts[k];
+    if (e.r) popEx.querySelector('.ref').textContent = 'Referência: ' + e.r;
+    document.body.appendChild(popEx);
+    var r = bt.getBoundingClientRect(), pw = popEx.offsetWidth, ph = popEx.offsetHeight;
+    var top = r.bottom + 8; if (top + ph > window.innerHeight - 8) top = Math.max(8, r.top - ph - 8);
+    var left = Math.max(12, Math.min(window.innerWidth - pw - 12, r.left - 20));
+    popEx.style.top = top + 'px'; popEx.style.left = left + 'px';
+    popEx.querySelector('.x').onclick = fecharExplica;
+    popEx.querySelector('.x').focus({preventScroll: true});
+  }
+  document.addEventListener('click', function (ev) {
+    var bt = ev.target.closest ? ev.target.closest('.explica') : null;
+    if (bt) { ev.preventDefault(); if (btEx === bt) fecharExplica(); else abrirExplica(bt); return; }
+    if (popEx && !popEx.contains(ev.target)) fecharExplica();
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && popEx) fecharExplica(); });
+  window.addEventListener('scroll', function () { if (popEx) fecharExplica(); }, true);
 
   // ---------------------------------------------------------- tour guiado
   var tour = null;

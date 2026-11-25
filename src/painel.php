@@ -345,3 +345,202 @@ function mb_substr_compat($s)
 {
     return preg_match('/^./u', trim((string)$s), $m) ? strtoupper($m[0]) : '?';
 }
+
+// ---------------------------------------------------------------- CSV da fila (painel e e-mail ao pós-vendas)
+function csvFila($rows)
+{
+    $out = fopen('php://temp', 'w+');
+    fwrite($out, "\xEF\xBB\xBF");
+    fputcsv($out, array('Semana', 'Respondido em', 'Nota', 'Cliente', 'Telefone', 'E-mail', 'Atendente', 'Link da conversa',
+        'Comentário do cliente', 'Motivo (IA)', 'Categoria (IA)', 'Responsável (IA)', 'Gravidade (IA)', 'Sugestão (IA)',
+        'Classificação do supervisor', 'Observação do supervisor', 'Supervisor', 'Status', 'Retorno do pós-vendas', 'Origem'), ';');
+    foreach ($rows as $r) {
+        fputcsv($out, array($r['semana_ref'], substr($r['respondido_em'], 0, 16), $r['nota'], $r['cliente'], $r['telefone'],
+            $r['email_cliente'], $r['atendente'], $r['link_conversa'], $r['feedback_cliente'], $r['ia_motivo'],
+            rotulo('CATEGORIAS', $r['ia_categoria']), rotulo('RESPONSAVEIS', $r['ia_responsavel']), $r['ia_gravidade'],
+            $r['ia_sugestao'], rotulo('CATEGORIAS', $r['classificacao']), $r['observacao'], $r['supervisor'], $r['status'],
+            isset($r['retorno_posvendas']) ? $r['retorno_posvendas'] : '',
+            isset($r['origem']) && $r['origem'] === 'ia' ? 'Auditoria por IA (sem nota)' : 'Nota do cliente'), ';');
+    }
+    rewind($out);
+    $csv = stream_get_contents($out);
+    fclose($out);
+    return $csv;
+}
+
+// ---------------------------------------------------------------- Guta (IA de atendimento)
+// Definição provisória: conversa sem atendente humano atribuído = atendida só pela Guta.
+function kpisGuta($F, $ini, $fim)
+{
+    $p = array();
+    $w = where(array('atendente' => '', 'time' => $F['time'], 'caixa' => $F['caixa']), $ini, $fim, $p);
+    return q1("SELECT count(*) AS conversas,
+                      count(*) FILTER (WHERE assignee_id IS NULL) AS so_guta,
+                      count(*) FILTER (WHERE assignee_id IS NULL AND resolvida) AS resolvidas_guta,
+                      count(*) FILTER (WHERE assignee_id IS NOT NULL) AS com_humano
+               FROM auditoria.vw_painel_conversas WHERE $w", $p);
+}
+
+function serieGuta($F)
+{
+    $g = $F['grao'];
+    $p = array();
+    $w = where(array('atendente' => '', 'time' => $F['time'], 'caixa' => $F['caixa']), $F['ini'], $F['fim'], $p);
+    return q("SELECT $g::text AS b,
+                     round(100.0 * count(*) FILTER (WHERE assignee_id IS NULL AND resolvida) / NULLIF(count(*), 0), 1) AS pct_guta,
+                     round(100.0 * count(*) FILTER (WHERE assignee_id IS NOT NULL) / NULLIF(count(*), 0), 1) AS pct_humano
+              FROM auditoria.vw_painel_conversas WHERE $w GROUP BY 1 ORDER BY 1", $p);
+}
+
+// ---------------------------------------------------------------- metas (semáforo)
+/** Retorna array(classe, texto) — classe: ok | atencao | fora | '' (sem meta/valor) */
+function semaforo($valor, $meta, $maiorMelhor, $fmtMeta)
+{
+    if ($valor === null || $meta === '' || $meta === null || !confLigado('metas_ativo')) {
+        return array('', '');
+    }
+    $v = (float)$valor;
+    $m = (float)$meta;
+    $folga = abs($m) * 0.05;
+    if ($maiorMelhor) {
+        $cl = $v >= $m ? 'ok' : ($v >= $m - $folga ? 'atencao' : 'fora');
+    } else {
+        $cl = $v <= $m ? 'ok' : ($v <= $m + $folga ? 'atencao' : 'fora');
+    }
+    $txt = array('ok' => 'Dentro da meta', 'atencao' => 'Perto da meta', 'fora' => 'Fora da meta');
+    return array($cl, $txt[$cl] . ' (' . $fmtMeta . ')');
+}
+
+// ---------------------------------------------------------------- pós-vendas
+function kpisPosVendas()
+{
+    return q1("SELECT count(*) FILTER (WHERE status IN ('enviado','tratado')) AS enviados,
+                      count(*) FILTER (WHERE status = 'tratado') AS tratados,
+                      percentile_cont(0.5) WITHIN GROUP (ORDER BY extract(epoch FROM tratado_em - enviado_em) / 3600.0)
+                        FILTER (WHERE status = 'tratado' AND enviado_em IS NOT NULL) AS horas_ate_tratar
+               FROM auditoria.csat_auditoria");
+}
+
+// ---------------------------------------------------------------- temas recorrentes
+function temasAbertos($lim = 6)
+{
+    return q("SELECT * FROM auditoria.temas WHERE status IN ('aberto', 'issue_aberta') ORDER BY qtd DESC, ultimo_em DESC LIMIT " . (int)$lim);
+}
+
+function taxa($a, $b)
+{
+    return ((float)$b) > 0 ? 100.0 * (float)$a / (float)$b : null;
+}
+
+// ---------------------------------------------------------------- qualidade (IA em todas as conversas)
+function kpisQa($F, $ini, $fim)
+{
+    $p = array();
+    $w = where($F, $ini, $fim, $p);
+    return q1("SELECT count(*) AS auditadas,
+                      count(*) FILTER (WHERE resolvido = 'sim') AS resolvidas,
+                      count(*) FILTER (WHERE resolvido = 'parcial') AS parciais,
+                      count(*) FILTER (WHERE resolvido = 'nao') AS nao_resolvidas,
+                      count(*) FILTER (WHERE resolvido IN ('sim','parcial','nao')) AS conclusivas,
+                      round(avg(nota_qa), 1) AS nota_media,
+                      count(*) FILTER (WHERE risco = 'alto') AS risco_alto,
+                      count(*) FILTER (WHERE risco = 'alto' AND nota_csat IS NULL) AS risco_sem_nota,
+                      count(*) FILTER (WHERE cliente_sem_resposta) AS sem_resposta,
+                      count(*) FILTER (WHERE nota_csat IS NULL) AS sem_nota,
+                      count(*) FILTER (WHERE sentimento_fim = 'negativo') AS termina_negativo,
+                      count(*) FILTER (WHERE sentimento_inicio = 'negativo' AND sentimento_fim <> 'negativo') AS recuperados,
+                      percentile_cont(0.5) WITHIN GROUP (ORDER BY maior_espera_min) AS espera_mediana,
+                      count(*) FILTER (WHERE NOT teve_humano) AS so_guta,
+                      count(*) FILTER (WHERE NOT teve_humano AND resolvido = 'sim') AS so_guta_resolvidas,
+                      count(*) FILTER (WHERE teve_humano) AS com_humano,
+                      count(*) FILTER (WHERE teve_humano AND resolvido = 'sim') AS com_humano_resolvidas
+               FROM auditoria.vw_painel_qa WHERE $w", $p);
+}
+
+/** Conversas encerradas no período (denominador da cobertura da auditoria por IA) */
+function encerradasPeriodo($F, $ini, $fim)
+{
+    $p = array();
+    $w = where($F, $ini, $fim, $p);
+    $r = q1("SELECT count(*) AS n FROM auditoria.vw_painel_conversas WHERE $w AND resolvida", $p);
+    return (int)$r['n'];
+}
+
+function serieQa($F)
+{
+    $g = $F['grao'];
+    $p = array();
+    $w = where($F, $F['ini'], $F['fim'], $p);
+    return q("SELECT $g::text AS b, round(avg(nota_qa), 1) AS nota,
+                     round(100.0 * count(*) FILTER (WHERE resolvido = 'sim') / NULLIF(count(*) FILTER (WHERE resolvido IN ('sim','parcial','nao')), 0), 1) AS pct_resolvido,
+                     count(*) AS n
+              FROM auditoria.vw_painel_qa WHERE $w GROUP BY 1 ORDER BY 1", $p);
+}
+
+function criteriosQa($F)
+{
+    $p = array();
+    $w = where($F, $F['ini'], $F['fim'], $p);
+    return q("SELECT e.key AS k, round(avg(e.value::numeric), 1) AS media, count(*) AS n
+              FROM auditoria.vw_painel_qa v, jsonb_each_text(v.criterios) e
+              WHERE $w AND e.value ~ '^[0-9.]+$' GROUP BY 1 ORDER BY 2", $p);
+}
+
+function falhasQa($F)
+{
+    $p = array();
+    $w = where($F, $F['ini'], $F['fim'], $p);
+    return q("SELECT f->>'criterio' AS k, count(*) AS n
+              FROM auditoria.vw_painel_qa v, jsonb_array_elements(v.falhas) f
+              WHERE $w AND jsonb_typeof(v.falhas) = 'array' GROUP BY 1 ORDER BY 2 DESC LIMIT 8", $p);
+}
+
+function motivosContatoQa($F)
+{
+    $p = array();
+    $w = where($F, $F['ini'], $F['fim'], $p);
+    return q("SELECT motivo_contato AS k, count(*) AS n,
+                     round(100.0 * count(*) FILTER (WHERE resolvido = 'sim') / NULLIF(count(*) FILTER (WHERE resolvido IN ('sim','parcial','nao')), 0), 0) AS pct_resolvido,
+                     round(avg(nota_qa)) AS nota
+              FROM auditoria.vw_painel_qa WHERE $w GROUP BY 1 ORDER BY 2 DESC", $p);
+}
+
+function conversasEmRisco($F, $lim = 12)
+{
+    $p = array();
+    $w = where($F, $F['ini'], $F['fim'], $p);
+    return q("SELECT v.conversation_id, v.assunto, v.resumo, v.atendente, v.nota_qa, v.resolvido, v.risco, v.nota_csat,
+                     v.cliente_sem_resposta, v.maior_espera_min, v.falhas, v.criada_em, v.teve_humano,
+                     EXISTS (SELECT 1 FROM auditoria.csat_auditoria a WHERE a.conversation_id = v.conversation_id) AS na_fila
+              FROM auditoria.vw_painel_qa v
+              WHERE $w AND (v.risco = 'alto' OR v.resolvido = 'nao')
+              ORDER BY (v.risco = 'alto') DESC, (v.nota_csat IS NULL) DESC, v.nota_qa ASC NULLS LAST, v.criada_em DESC
+              LIMIT " . (int)$lim, $p);
+}
+
+function qaPorAtendente($F)
+{
+    $p = array();
+    $w = where($F, $F['ini'], $F['fim'], $p);
+    $r = q("SELECT assignee_id AS id, count(*) AS auditadas, round(avg(nota_qa)) AS nota_qa,
+                   round(100.0 * count(*) FILTER (WHERE resolvido = 'sim') / NULLIF(count(*) FILTER (WHERE resolvido IN ('sim','parcial','nao')), 0), 0) AS pct_real
+            FROM auditoria.vw_painel_qa WHERE $w AND assignee_id IS NOT NULL GROUP BY 1", $p);
+    $m = array();
+    foreach ($r as $x) {
+        $m[(int)$x['id']] = $x;
+    }
+    return $m;
+}
+
+/** Botão "i" que abre a explicação do indicador (textos em src/views/explicacoes.php) */
+function explica($chave)
+{
+    return '<button type="button" class="explica" data-explica="' . h($chave) . '" aria-label="O que é este indicador?" aria-expanded="false">i</button>';
+}
+
+/** Etiqueta de meta (semáforo) com texto, nunca só cor */
+function metaHtml($valor, $meta, $maiorMelhor, $fmtMeta)
+{
+    list($cl, $txt) = semaforo($valor, $meta, $maiorMelhor, 'meta ' . $fmtMeta);
+    return $cl ? ' <span class="meta ' . $cl . '">' . h($txt) . '</span>' : '';
+}

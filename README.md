@@ -15,18 +15,25 @@ auditoria_suporte/
 ├── bin/
 │   ├── sync_api.php       # sincronização via API (cron a cada 15 min)
 │   ├── analisar_ia.php    # análise de IA das notas baixas (cron)
+│   ├── agendador.php      # alertas, resumo semanal, temas e auditoria de qualidade (cron 5 min)
 │   ├── criar_usuario.php  # gera usuário/senha do painel
 │   └── atualizar.sh       # atualiza o servidor pela main
 ├── src/
 │   ├── lib.php            # funções compartilhadas (API, banco, mapeamento)
 │   ├── ia.php             # transcrição, máscara de dados pessoais, chamada à IA
 │   ├── painel.php         # consultas do painel de BI
+│   ├── sync.php           # sincronização via API (funções)
+│   ├── notificar.php      # configurações, e-mail (SMTP) e WhatsApp
+│   ├── automacoes.php     # alerta, resumo semanal, pós-vendas, temas, issue no GitHub
+│   ├── qa.php             # auditoria de qualidade por IA de todas as conversas
 │   ├── views/             # telas do painel (login, diagnóstico, atendentes, fila)
 │   └── vendor/            # Chart.js 4.4.1 (MIT), embutido na página — sem CDN
 ├── sql/
 │   ├── 01_schema.sql      # tabelas, fila CSAT e views do Metabase
 │   ├── 02_ia.sql          # colunas da análise de IA + view de motivos
 │   ├── 03_painel.sql      # views do painel de BI
+│   ├── 04_automacoes.sql  # configurações, envios, temas, pós-vendas
+│   ├── 05_qualidade.sql   # auditoria de qualidade por IA
 │   └── 99_permissoes.sql  # grants do Metabase (roda por último)
 ├── config/
 │   ├── config.example.php # modelo
@@ -75,19 +82,24 @@ Detalhes do iTalk (validados em 25/11/2026):
    Ajustar `auditoria.config`: `italk_url`, `csat_nota_corte`, `csat_inicio`, `rastreio_inicio` (= dia em que o webhook for ligado).
 3. **Config**: `cp config/config.example.php config/config.php` → preencher; `webhook_token` com `openssl rand -hex 24`; `chmod 640`.
 4. **Primeira carga**: `php bin/sync_api.php` (busca desde `carga_inicio`).
-5. **Cron**: `*/15 * * * * php /CAMINHO/auditoria_suporte/bin/sync_api.php >> /var/log/auditoria_sync.log 2>&1`
+5. **Cron**:
+   ```
+   */15 * * * * php /CAMINHO/auditoria_suporte/bin/sync_api.php >> /var/log/auditoria_sync.log 2>&1
+   5,20,35,50 * * * * php /CAMINHO/auditoria_suporte/bin/analisar_ia.php >> /var/log/auditoria_ia.log 2>&1
+   */5 * * * * php /CAMINHO/auditoria_suporte/bin/agendador.php >> /var/log/auditoria_agendador.log 2>&1
+   ```
 6. **Conferir segurança** (obrigatório antes de cadastrar o webhook):
    ```bash
-   curl -I https://SEU-SERVIDOR/auditoria_suporte/config/config.php   # 403
-   curl -I https://SEU-SERVIDOR/auditoria_suporte/src/lib.php         # 403
-   curl -X POST "https://SEU-SERVIDOR/auditoria_suporte/public/webhook.php?token=TOKEN" -d '{}'   # {"ok":true}
-   curl -X POST "https://SEU-SERVIDOR/auditoria_suporte/public/webhook.php?token=errado" -d '{}'  # 403
+   curl -I https://appiasuporte.igut.med.br/auditoria_suporte/config/config.php   # 403
+   curl -I https://appiasuporte.igut.med.br/auditoria_suporte/src/lib.php         # 403
+   curl -X POST "https://appiasuporte.igut.med.br/auditoria_suporte/webhook.php?token=TOKEN" -d '{}'   # {"ok":true}
+   curl -X POST "https://appiasuporte.igut.med.br/auditoria_suporte/webhook.php?token=errado" -d '{}'  # 403
    ```
 7. **Webhook** (no servidor do iTalk, via API ou tela Configurações → Integrações → Webhooks da conta 3):
    ```bash
    curl -s -X POST -H "api_access_token: TOKEN" -H "Content-Type: application/json" \
      "https://ITALK/api/v1/accounts/3/webhooks" \
-     -d '{"webhook":{"url":"https://SEU-SERVIDOR/auditoria_suporte/public/webhook.php?token=WEBHOOK_TOKEN","subscriptions":["conversation_created","conversation_status_changed","conversation_updated"]}}'
+     -d '{"webhook":{"url":"https://appiasuporte.igut.med.br/auditoria_suporte/webhook.php?token=WEBHOOK_TOKEN","subscriptions":["conversation_created","conversation_status_changed","conversation_updated"]}}'
    ```
    Conferir: `SELECT * FROM auditoria.webhook_eventos ORDER BY id DESC LIMIT 5;`
    **Assinatura**: copie o `secret` do webhook (GET `/api/v1/accounts/3/webhooks`) para `webhook_secret` no `config.php`.
@@ -110,29 +122,44 @@ Alterações de banco novas = novo arquivo `sql/NN_descricao.sql`. Nunca editar 
 
 ## Painel de BI
 
-`https://SEU-SERVIDOR/auditoria_suporte/painel.php` — login próprio (sessão + CSRF), três abas:
+`https://appiasuporte.igut.med.br/auditoria_suporte/painel.php` — login próprio (sessão + CSRF).
 
-- **Diagnóstico**: frase-resumo gerada dos dados, a diferença entre "encerrada no sistema" e "cliente satisfeito", KPIs com comparação ao período anterior e minigráficos (conversas, % resolvidas no sistema, % resolvidas sem reabrir,
-  tempo mediano até a 1ª resposta, CSAT médio, notas baixas), volume, taxa de resolução, mapa de calor dia × hora,
-  tempo de 1ª resposta, CSAT, distribuição das notas, volume por caixa e a seção **"Por que as notas são baixas"** (IA).
-- **Atendentes**: ranking ordenável (conversas, % resolvidas, reaberturas, 1ª resposta, CSAT, notas baixas, motivo mais comum).
-- **Auditoria CSAT**: fila do supervisor com a análise da IA, classificação (pré-preenchida pela IA), observação,
-  exportação CSV para o pós-vendas e "marcar semana como enviada".
+| Aba | O que mostra |
+|---|---|
+| **Diagnóstico** | Frase-resumo gerada dos dados; "do encerramento à satisfação" (encerradas → sem reabrir → **resolvidas de fato pela IA** → satisfeitos); KPIs com comparação e **semáforo de metas**; volume, resolução, mapa de calor, 1ª resposta, CSAT, notas, canais; **Guta** (contenção e resolução); motivos das notas baixas; **problemas recorrentes de produto** com issue no GitHub |
+| **Qualidade (IA)** | Auditoria de **todas** as conversas encerradas, com ou sem nota: resolução real, nota de qualidade por critério, falhas com trecho da conversa, risco de insatisfação sem nota, cliente sem resposta, maior espera, motivos de contato, Guta × equipe, conversas que pedem atenção |
+| **Atendentes** | Destaques e ranking ordenável, incluindo qualidade e resolução real pela IA |
+| **Auditoria CSAT** | Fluxo da diretoria: notas baixas + conversas de risco da IA → avaliação do supervisor → **e-mail ao pós-vendas com planilha** → retorno e "tratado" do pós-vendas |
+| **Configurações** | Só administradores (`painel_admins`). Liga/desliga cada recurso, metas, destinatários, SMTP, WhatsApp, botões de teste e histórico de envios |
 
-Filtros: 7/30/90 dias, tudo ou datas livres; atendente, time e caixa de entrada.
-
-Recursos de uso:
-- **Tour guiado** em cada tela (abre sozinho na primeira visita; botão "Tour guiado" ou tecla **T**; setas e Esc navegam).
-- **Modo apresentação** em tela cheia, sem barra lateral e filtros (botão "Apresentar" ou tecla **A**; Esc sai).
-- **Imprimir / salvar em PDF** com layout próprio para A4 paisagem.
-- Animações sutis só na entrada da página (números contam, barras crescem); desligadas para quem usa "reduzir movimento".
+Todo indicador e gráfico tem um botão **i** com: o que é, como é calculado, como ler e referência de mercado.
+Também: tour guiado (tecla T), modo apresentação (tecla A), impressão/PDF e animações sutis (respeitam "reduzir movimento").
 
 Criar usuário:
 ```bash
 php bin/criar_usuario.php marcelo 'SenhaForte123'   # cola a linha gerada em 'painel_usuarios' no config/config.php
 ```
-No Apache, além do webhook, publique só o arquivo do painel (mesmo padrão do conf.d):
-`Alias /auditoria_suporte/painel.php /var/www/webroot/ROOT/auditoria_suporte/public/painel.php`
+
+## Automações (bin/agendador.php, cron a cada 5 min)
+
+```
+*/5 * * * * php /CAMINHO/auditoria_suporte/bin/agendador.php >> /var/log/auditoria_agendador.log 2>&1
+```
+Cada execução, conforme o que estiver ligado em Configurações:
+
+| Recurso | Como funciona |
+|---|---|
+| **Alerta de nota baixa** | Busca CSAT novo e avisa por e-mail e/ou WhatsApp em até 5 min (só notas recebidas depois de ligado; nunca repete) |
+| **Resumo semanal** | No dia/hora configurados, e-mail com a semana anterior × retrasada (+ resumo curto no WhatsApp, opcional) |
+| **Problemas recorrentes** | 1×/dia a IA agrupa notas baixas com causa em produto em temas; botão abre issue no GitHub |
+| **Auditoria de qualidade** | A IA audita um lote de conversas encerradas; risco alto sem nota entra na fila do supervisor |
+
+Envio ao pós-vendas: botão na Auditoria CSAT. Com e-mails do pós-vendas + SMTP configurados, envia e-mail com a planilha
+e marca como enviado; sem isso, só marca e a planilha é baixada manualmente.
+
+**E-mail:** PHPMailer (vendorizado em `src/vendor/PHPMailer`), SMTP com TLS/SSL. **WhatsApp:** pelo próprio iTalk (caixa
+de WhatsApp da conta), Evolution API, Z-API ou webhook genérico (n8n/Make). Segredos ficam no banco e nunca voltam à tela.
+Tudo que é enviado fica em `auditoria.envios` (aba Configurações > Histórico).
 
 ## Análise de IA das notas baixas
 

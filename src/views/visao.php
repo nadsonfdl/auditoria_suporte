@@ -20,6 +20,7 @@ $grao  = $F['grao'] === 'dia' ? 'dia' : 'semana';
 $lacuna = array(
     array('Encerradas no sistema', $taxaRes, num($kc['resolvidas']) . ' de ' . num($kc['conversas']) . ' conversas', 'l-sis'),
     array('Resolvidas sem reabrir', $kc['rastreadas'] ? $taxaSR : null, $kc['rastreadas'] ? num($kc['sem_reabrir']) . ' de ' . num($kc['rastreadas']) . ' acompanhadas' : 'em medição', 'l-real'),
+    array('Resolvidas de fato (IA)', $kq['conclusivas'] ? $taxaReal : null, $kq['conclusivas'] ? num($kq['resolvidas']) . ' de ' . num($kq['conclusivas']) . ' conversas avaliadas pela IA' : 'aguardando a auditoria por IA', 'l-ia'),
     array('Clientes satisfeitos', $satisf, num($ks['satisfeitos']) . ' de ' . num($ks['respostas']) . ' avaliações com nota 4 ou 5', 'l-cli'),
 );
 ?>
@@ -34,14 +35,14 @@ $lacuna = array(
 .diag-texto li::before{content:"";flex:none;width:5px;height:5px;border-radius:50%;background:var(--pri);margin-top:9px}
 .lacuna{background:#f9fafd;border-left:1px solid var(--linha);padding:28px 30px;display:flex;flex-direction:column}
 .lacuna h2{font-size:13.5px;font-weight:600;margin:0 0 18px;color:var(--tinta-2)}
-.lacuna .linha{margin-bottom:16px}
+.lacuna .linha{margin-bottom:13px}
 .lacuna .top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 .lacuna .top span{font-weight:500}
 .lacuna .top b{font-size:22px;font-weight:600;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
 .lacuna .trilho{height:12px;background:#e6ebf3;border-radius:6px;overflow:hidden;margin:7px 0 4px}
 .lacuna .trilho i{display:block;height:100%;border-radius:6px;width:0;animation:crescer 1.1s cubic-bezier(.2,.7,.2,1) forwards}
-.lacuna .l-sis i{background:#a8b2c2}.lacuna .l-real i{background:#6aabf1}.lacuna .l-cli i{background:var(--pri)}
-.lacuna .linha:nth-child(3) .trilho i{animation-delay:.15s}.lacuna .linha:nth-child(4) .trilho i{animation-delay:.3s}
+.lacuna .l-sis i{background:#a8b2c2}.lacuna .l-real i{background:#9dc8f7}.lacuna .l-ia i{background:#338ced}.lacuna .l-cli i{background:var(--pri)}
+.lacuna .linha:nth-child(3) .trilho i{animation-delay:.12s}.lacuna .linha:nth-child(4) .trilho i{animation-delay:.24s}.lacuna .linha:nth-child(5) .trilho i{animation-delay:.36s}
 .lacuna small{color:var(--tinta-3);font-size:12px}
 .lacuna .conclusao{margin-top:auto;padding-top:14px;border-top:1px dashed #d3dae5;color:var(--tinta-2);font-size:13px}
 .lacuna .conclusao b{color:var(--tinta)}
@@ -77,6 +78,17 @@ $lacuna = array(
 .escala i{width:18px;height:9px;border-radius:2px;display:inline-block}
 .escala span{margin-left:8px}
 
+/* ---------- números grandes / guta / temas ---------- */
+.big-num{font-size:34px;font-weight:600;letter-spacing:-.8px;font-variant-numeric:tabular-nums;margin:4px 0 2px}
+.baixo-num{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline;margin-bottom:14px}
+.mini-linhas{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--linha-2);padding-top:12px}
+.mini-linhas div{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--tinta-2)}
+.mini-linhas b{color:var(--tinta);font-variant-numeric:tabular-nums}
+.temas{display:flex;flex-direction:column}
+.tema{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;border-top:1px solid var(--linha-2)}
+.tema:first-child{border-top:0}
+.tema-n{width:40px;height:40px;border-radius:10px;background:var(--pri-claro);color:var(--pri-2);display:grid;place-items:center;font-weight:600;font-size:16px}
+.tema-t b{display:block;font-weight:600}.tema-t span{display:block;color:var(--tinta-2);font-size:13px}.tema-t small{color:var(--tinta-3);font-size:12px}
 /* ---------- casos ---------- */
 .caso{display:flex;gap:14px;padding:14px 0;border-top:1px solid var(--linha-2)}
 .caso:first-of-type{border-top:0;padding-top:4px}
@@ -93,7 +105,7 @@ $lacuna = array(
     <?php if ($DIAG_NOTAS): ?><ul><?php foreach ($DIAG_NOTAS as $n): ?><li><?= h($n) ?></li><?php endforeach; ?></ul><?php endif; ?>
   </div>
   <div class="lacuna" data-tour="2" data-tour-titulo="Encerrar não é resolver" data-tour-texto="Compara o que o sistema marca como resolvido com o que o cliente realmente aprova. Essa diferença é o que a auditoria quer reduzir.">
-    <h2>Do encerramento à satisfação</h2>
+    <h2 class="cab-painel">Do encerramento à satisfação <?= explica('lacuna') ?></h2>
     <?php foreach ($lacuna as $l): ?>
       <div class="linha <?= $l[3] ?>">
         <div class="top"><span><?= h($l[0]) ?></span><b><?= $l[1] === null ? '—' : pct($l[1]) ?></b></div>
@@ -102,56 +114,56 @@ $lacuna = array(
       </div>
     <?php endforeach; ?>
     <?php if ($GAP !== null): ?>
-      <div class="conclusao"><b><?= number_format(abs($GAP), 1, ',', '.') ?> pontos</b> separam o que o sistema encerra do que o cliente aprova.</div>
+      <div class="conclusao"><?php if ($kq['conclusivas'] && $taxaReal !== null && $taxaRes !== null): ?><b><?= number_format(abs($taxaRes - $taxaReal), 1, ',', '.') ?> pontos</b> separam o que o sistema encerra do que foi resolvido de fato.<?php else: ?><b><?= number_format(abs($GAP), 1, ',', '.') ?> pontos</b> separam o que o sistema encerra do que o cliente aprova.<?php endif; ?></div>
     <?php endif; ?>
   </div>
 </section>
 
 <section class="faixa" aria-label="Indicadores" data-tour="3" data-tour-titulo="Indicadores do período" data-tour-texto="Cada número traz a variação em relação ao período anterior e a tendência no minigráfico. Passe o mouse no ? para ver como é calculado.">
   <div class="ind">
-    <div class="rot">Conversas</div>
+    <div class="rot">Conversas <?= explica('conversas') ?></div>
     <div class="val"><?= num($kc['conversas']) ?></div>
     <div class="baixo"><?= delta($kc['conversas'], $kca['conversas'], 'rel', true) ?></div><?= spark($vol, '#1b64be') ?>
   </div>
   <div class="ind">
-    <div class="rot">Encerradas <span class="ajuda" title="Status 'resolvida' no iTalk. Inclui encerramentos automáticos e da Guta.">?</span></div>
+    <div class="rot">Encerradas <?= explica('encerradas') ?></div>
     <div class="val"><?= pct($taxaRes) ?></div>
     <div class="baixo"><?= delta($taxaRes, $taxaResA, 'pp', true) ?></div><?= spark($pr, '#9aa5b6') ?>
   </div>
   <div class="ind">
-    <div class="rot">Sem reabrir <span class="ajuda" title="Resolvidas que não voltaram a abrir. Medido pelo webhook a partir do início do rastreio.">?</span></div>
+    <div class="rot">Sem reabrir <?= explica('sem_reabrir') ?></div>
     <div class="val"><?= $kc['rastreadas'] ? pct($taxaSR) : '—' ?></div>
-    <div class="baixo"><?= $kc['rastreadas'] ? delta($taxaSR, $taxaSRA, 'pp', true) . ' <span class="delta neutro">' . num($kc['reaberturas']) . ' reaberturas</span>' : '<span class="delta neutro">em medição</span>' ?></div>
+    <div class="baixo"><?= $kc['rastreadas'] ? delta($taxaSR, $taxaSRA, 'pp', true) . ' <span class="delta neutro">' . num($kc['reaberturas']) . ' reaberturas</span>' : '<span class="delta neutro">em medição</span>' ?><?= metaHtml($kc['rastreadas'] ? $taxaSR : null, conf('meta_sem_reabrir_pct'), true, conf('meta_sem_reabrir_pct') . '%') ?></div>
   </div>
   <div class="ind">
-    <div class="rot">1ª resposta <span class="ajuda" title="Mediana do tempo entre a abertura da conversa e a primeira resposta de um atendente.">?</span></div>
+    <div class="rot">1ª resposta <?= explica('primeira_resposta') ?></div>
     <div class="val"><?= duracao($kc['mediana_1a']) ?></div>
-    <div class="baixo"><?= deltaMin($kc['mediana_1a'], $kca['mediana_1a']) ?></div><?= spark($p1, '#e07a2e') ?>
+    <div class="baixo"><?= deltaMin($kc['mediana_1a'], $kca['mediana_1a']) ?><?= metaHtml($kc['mediana_1a'], conf('meta_1a_resposta_min'), false, conf('meta_1a_resposta_min') . ' min') ?></div><?= spark($p1, '#e07a2e') ?>
   </div>
   <div class="ind">
-    <div class="rot">CSAT médio</div>
+    <div class="rot">CSAT médio <?= explica('csat') ?></div>
     <div class="val"><?= $ks['respostas'] ? num($ks['media'], 2) : '—' ?><small> de 5</small></div>
-    <div class="baixo"><?= delta($ks['media'], $ksa['media'], 'abs', true) ?></div><?= spark($med, '#1b64be') ?>
+    <div class="baixo"><?= delta($ks['media'], $ksa['media'], 'abs', true) ?><?= metaHtml($ks['respostas'] ? $ks['media'] : null, conf('meta_csat'), true, str_replace('.', ',', conf('meta_csat'))) ?></div><?= spark($med, '#1b64be') ?>
   </div>
   <div class="ind alerta">
-    <div class="rot">Notas baixas</div>
+    <div class="rot">Notas baixas <?= explica('notas_baixas') ?></div>
     <div class="val"><?= num($ks['baixas']) ?><small> de <?= num($ks['respostas']) ?></small></div>
-    <div class="baixo"><?= delta($ks['baixas'], $ksa['baixas'], 'rel', false) ?><?php if ($pend): ?><a class="fila" href="<?= h(url(array('p' => 'fila', 'status' => 'pendente', 'semana' => 'todas'))) ?>"><?= num($pend) ?> para avaliar</a><?php endif; ?></div>
+    <div class="baixo"><?= delta($ks['baixas'], $ksa['baixas'], 'rel', false) ?><?= metaHtml($ks['respostas'] ? taxa($ks['baixas'], $ks['respostas']) : null, conf('meta_notas_baixas_pct'), false, 'até ' . conf('meta_notas_baixas_pct') . '%') ?><?php if ($pend): ?><a class="fila" href="<?= h(url(array('p' => 'fila', 'status' => 'pendente', 'semana' => 'todas'))) ?>"><?= num($pend) ?> para avaliar</a><?php endif; ?></div>
   </div>
 </section>
 
 <div class="grade">
   <div class="painel c8">
-    <h3>Volume de conversas</h3><p class="leg">Conversas abertas por <?= $grao ?></p>
+    <h3 class="cab-painel">Volume de conversas <?= explica('volume') ?></h3><p class="leg">Conversas abertas por <?= $grao ?></p>
     <div class="graf"><canvas id="gVolume" role="img" aria-label="Volume de conversas por <?= $grao ?>"></canvas></div>
   </div>
   <div class="painel c4">
-    <h3>Taxa de resolução</h3><p class="leg">Encerradas no sistema<?= $temSR ? ' e resolvidas sem reabrir' : '' ?></p>
+    <h3 class="cab-painel">Taxa de resolução <?= explica('taxa_resolucao') ?></h3><p class="leg">Encerradas no sistema<?= $temSR ? ' e resolvidas sem reabrir' : '' ?></p>
     <div class="graf"><canvas id="gResolucao" role="img" aria-label="Taxa de resolução"></canvas></div>
   </div>
 
   <div class="painel c7" data-tour="5" data-tour-titulo="Quando o suporte é procurado" data-tour-texto="Mapa de calor por dia e hora. Ajuda a dimensionar a equipe nos horários de pico. Passe o mouse em cada quadrado.">
-    <h3>Quando o suporte é procurado</h3><p class="leg">Conversas abertas por dia da semana e hora</p>
+    <h3 class="cab-painel">Quando o suporte é procurado <?= explica('calor') ?></h3><p class="leg">Conversas abertas por dia da semana e hora</p>
     <?php if ($maxCalor):
         $dias  = array(1 => 'Seg', 2 => 'Ter', 3 => 'Qua', 4 => 'Qui', 5 => 'Sex', 6 => 'Sáb', 7 => 'Dom');
         $rampa = array('#f1f5fb', '#cce3fd', '#9dc8f7', '#6aabf1', '#338ced', '#2370cd', '#1b64be', '#14498f'); ?>
@@ -168,20 +180,20 @@ $lacuna = array(
     <?php else: ?><div class="vazio">Sem conversas no período.</div><?php endif; ?>
   </div>
   <div class="painel c5">
-    <h3>Tempo até a 1ª resposta</h3><p class="leg">Mediana por <?= $grao ?></p>
+    <h3 class="cab-painel">Tempo até a 1ª resposta <?= explica('tempo_1a') ?></h3><p class="leg">Mediana por <?= $grao ?></p>
     <div class="graf"><canvas id="gPrimeira" role="img" aria-label="Tempo até a primeira resposta"></canvas></div>
   </div>
 
   <div class="painel c4">
-    <h3>CSAT médio</h3><p class="leg">Nota média de 1 a 5 por <?= $grao ?></p>
+    <h3 class="cab-painel">CSAT médio <?= explica('csat_serie') ?></h3><p class="leg">Nota média de 1 a 5 por <?= $grao ?></p>
     <div class="graf"><canvas id="gCsat" role="img" aria-label="CSAT médio"></canvas></div>
   </div>
   <div class="painel c4">
-    <h3>Como os clientes avaliam</h3><p class="leg">Respostas em cada nota</p>
+    <h3 class="cab-painel">Como os clientes avaliam <?= explica('dist_notas') ?></h3><p class="leg">Respostas em cada nota</p>
     <div class="graf"><canvas id="gNotas" role="img" aria-label="Distribuição das notas"></canvas></div>
   </div>
   <div class="painel c4">
-    <h3>Por onde chegam</h3><p class="leg">Conversas por caixa de entrada</p>
+    <h3 class="cab-painel">Por onde chegam <?= explica('caixas') ?></h3><p class="leg">Conversas por caixa de entrada</p>
     <?php if ($caixas): $mx = (int)$caixas[0]['n']; $tot = array_sum(array_map(function ($x) { return (int)$x['n']; }, $caixas)); ?>
       <div class="hbar">
         <?php foreach ($caixas as $x): ?>
@@ -194,13 +206,45 @@ $lacuna = array(
   </div>
 </div>
 
+
+<?php if ($GUTA && (int)$kg['conversas'] > 0):
+    $contencao  = taxa($kg['so_guta'], $kg['conversas']);
+    $contencaoA = taxa($kga['so_guta'], $kga['conversas']);
+    $resGuta    = taxa($kg['resolvidas_guta'], $kg['so_guta']);
+    $realGuta   = $kq['so_guta'] ? taxa($kq['so_guta_resolvidas'], $kq['so_guta']) : null;
+    $realHum    = $kq['com_humano'] ? taxa($kq['com_humano_resolvidas'], $kq['com_humano']) : null;
+    $lblG = array(); $pg = array(); $ph = array();
+    foreach ($sg as $r) { $lblG[] = rotuloBucket($r['b'], $F['grao']); $pg[] = $r['pct_guta'] === null ? null : (float)$r['pct_guta']; $ph[] = $r['pct_humano'] === null ? null : (float)$r['pct_humano']; }
+?>
+<div class="titulo-secao">
+  <h2>Guta, a IA de atendimento</h2>
+  <p>Quanto a Guta resolve sozinha e quanto passa para a equipe.</p>
+</div>
+<div class="grade" data-tour="6" data-tour-titulo="Guta, a IA de atendimento" data-tour-texto="Mostra quanto a Guta resolve sem passar para um humano e compara a resolução real dela com a dos atendentes.">
+  <div class="painel c4">
+    <h3 class="cab-painel">Contenção da Guta <?= explica('guta') ?></h3><p class="leg">Conversas atendidas só pela Guta</p>
+    <div class="big-num"><?= pct($contencao) ?></div>
+    <div class="baixo-num"><?= delta($contencao, $contencaoA, 'pp', true) ?> <span class="delta neutro"><?= num($kg['so_guta']) ?> de <?= num($kg['conversas']) ?> conversas</span></div>
+    <div class="mini-linhas">
+      <div><span>Encerradas pela Guta</span><b><?= pct($resGuta) ?></b></div>
+      <div><span>Passaram para a equipe</span><b><?= num($kg['com_humano']) ?></b></div>
+      <?php if ($realGuta !== null): ?><div><span>Resolvidas de fato pela Guta (IA)</span><b><?= pct($realGuta) ?></b></div><?php endif; ?>
+      <?php if ($realHum !== null): ?><div><span>Resolvidas de fato pela equipe (IA)</span><b><?= pct($realHum) ?></b></div><?php endif; ?>
+    </div>
+  </div>
+  <div class="painel c8">
+    <h3 class="cab-painel">Guta e equipe ao longo do tempo <?= explica('guta_vs_humano') ?></h3><p class="leg">% das conversas resolvidas só pela Guta e % que passaram para um atendente</p>
+    <div class="graf"><canvas id="gGuta" role="img" aria-label="Guta e equipe ao longo do tempo"></canvas></div>
+  </div>
+</div>
+<?php endif; ?>
 <div class="titulo-secao">
   <h2>O que dizem as notas baixas</h2>
   <p>Cada conversa com nota até <?= (int)$corte ?> é lida pela IA, que aponta o motivo e o responsável.</p>
 </div>
 <div class="grade">
-  <div class="painel c5" data-tour="6" data-tour-titulo="O que dizem as notas baixas" data-tour-texto="A IA lê cada conversa com nota baixa e aponta o motivo e quem é o responsável: atendimento, produto, processo ou o próprio cliente.">
-    <h3>Motivos</h3><p class="leg">Categoria atribuída pela IA</p>
+  <div class="painel c5" data-tour="7" data-tour-titulo="O que dizem as notas baixas" data-tour-texto="A IA lê cada conversa com nota baixa e aponta o motivo e quem é o responsável: atendimento, produto, processo ou o próprio cliente.">
+    <h3 class="cab-painel">Motivos <?= explica('motivos_ia') ?></h3><p class="leg">Categoria atribuída pela IA</p>
     <?php if ($iaCat): $mx = (int)$iaCat[0]['n']; ?>
       <div class="hbar">
         <?php foreach ($iaCat as $x): ?>
@@ -208,7 +252,7 @@ $lacuna = array(
         <?php endforeach; ?>
       </div>
       <?php if ($iaResp): $mx = (int)$iaResp[0]['n']; ?>
-        <h3 style="margin-top:26px">Responsável</h3><p class="leg">Onde está a causa, segundo a IA</p>
+        <h3 class="cab-painel" style="margin-top:26px">Responsável <?= explica('responsavel_ia') ?></h3><p class="leg">Onde está a causa, segundo a IA</p>
         <div class="hbar">
           <?php foreach ($iaResp as $x): ?>
             <div class="t"><?= h(rotulo('RESPONSAVEIS', $x['k'])) ?></div><div class="b"><i style="width:<?= round(100 * $x['n'] / $mx, 1) ?>%;background:var(--violeta)"></i></div><div class="n"><?= num($x['n']) ?></div>
@@ -217,8 +261,8 @@ $lacuna = array(
       <?php endif; ?>
     <?php else: ?><div class="vazio">Nenhuma nota baixa analisada no período.</div><?php endif; ?>
   </div>
-  <div class="painel c7" data-tour="7" data-tour-titulo="Casos mais graves" data-tour-texto="Os atendimentos que mais pedem atenção. Clique em Abrir caso para ver a análise completa e registrar a avaliação.">
-    <h3>Casos mais graves</h3><p class="leg">Leitura da IA sobre cada atendimento. A avaliação final é do supervisor.</p>
+  <div class="painel c7" data-tour="8" data-tour-titulo="Casos mais graves" data-tour-texto="Os atendimentos que mais pedem atenção. Clique em Abrir caso para ver a análise completa e registrar a avaliação.">
+    <h3 class="cab-painel">Casos mais graves <?= explica('casos_graves') ?></h3><p class="leg">Leitura da IA sobre cada atendimento. A avaliação final é do supervisor.</p>
     <?php if ($analises): foreach ($analises as $a): ?>
       <div class="caso">
         <div class="nota n<?= (int)$a['nota'] ?>" title="Nota <?= (int)$a['nota'] ?>"><?= (int)$a['nota'] ?></div>
@@ -236,6 +280,26 @@ $lacuna = array(
     <?php endforeach; else: ?><div class="vazio">Nenhuma análise no período.</div><?php endif; ?>
   </div>
 </div>
+
+
+<?php if ($TEMAS): ?>
+<div class="painel" id="temas" style="margin-top:16px">
+  <h3 class="cab-painel">Problemas recorrentes de produto <?= explica('temas') ?></h3><p class="leg">Reclamações que se repetem e apontam para o sistema, agrupadas pela IA</p>
+  <div class="temas">
+    <?php foreach ($TEMAS as $t): ?>
+      <div class="tema">
+        <div class="tema-n"><?= (int)$t['qtd'] ?></div>
+        <div class="tema-t"><b><?= h($t['titulo']) ?></b><?php if ($t['descricao']): ?><span><?= h($t['descricao']) ?></span><?php endif; ?>
+          <small><?= $t['ultimo_em'] ? 'Último caso em ' . date('d/m', strtotime($t['ultimo_em'])) : '' ?></small></div>
+        <div class="tema-a">
+          <?php if ($t['issue_url']): ?><a class="btn" href="<?= h($t['issue_url']) ?>" target="_blank" rel="noopener">Ver issue</a>
+          <?php elseif ($ADMIN): ?><form method="post"><input type="hidden" name="csrf" value="<?= h(csrf()) ?>"><input type="hidden" name="acao" value="abrir_issue"><input type="hidden" name="id" value="<?= (int)$t['id'] ?>"><button class="btn" type="submit">Abrir issue no GitHub</button></form><?php endif; ?>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
 
 <script><?php readfile(__DIR__ . '/../vendor/chart.umd.min.js'); /* Chart.js 4.4.1, MIT */ ?></script>
 <script>
@@ -258,7 +322,8 @@ $lacuna = array(
   var x = {grid: {display: false}, border: {color: C.eixo}, ticks: {maxRotation: 0, autoSkipPadding: 14}};
   var cruz = {mode: 'index', intersect: false};
   var br = function (v) { return v === null ? '—' : v.toLocaleString('pt-BR'); };
-  var linha = function (cor, extra) { var o = {borderColor: cor, backgroundColor: cor, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, pointHitRadius: 12, tension: .3, spanGaps: true}; for (var k in extra) o[k] = extra[k]; return o; };
+  var poucos = <?= count($lbl) ?> < 3;
+  var linha = function (cor, extra) { var o = {borderColor: cor, backgroundColor: cor, borderWidth: 2, pointRadius: poucos ? 4 : 0, pointHoverRadius: 5, pointHitRadius: 12, tension: .3, spanGaps: true}; for (var k in extra) o[k] = extra[k]; return o; };
   var degrade = function (ctx, cor) { var g = ctx.createLinearGradient(0, 0, 0, 240); g.addColorStop(0, cor + '33'); g.addColorStop(1, cor + '00'); return g; };
 
   var L = <?= json_encode($lbl) ?>, LS = <?= json_encode($lblS) ?>;
@@ -294,6 +359,17 @@ $lacuna = array(
     options: {interaction: cruz, plugins: {legend: {display: false}, tooltip: {displayColors: false, callbacks: {label: function (c) { return 'Média ' + c.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ', ' + c.dataset.respostas[c.dataIndex] + ' respostas'; }}}},
               scales: {x: x, y: y({min: 1, max: 5, ticks: {padding: 8, stepSize: 1}})}}
   });
+
+  <?php if ($GUTA && (int)$kg['conversas'] > 0): ?>
+  new Chart(document.getElementById('gGuta'), {
+    type: 'line',
+    data: {labels: <?= json_encode($lblG) ?>, datasets: [
+      linha(C.pri, {label: 'Resolvidas só pela Guta', data: <?= json_encode($pg) ?>}),
+      linha(C.laranja, {label: 'Passaram para a equipe', data: <?= json_encode($ph) ?>})]},
+    options: {interaction: cruz, plugins: {legend: {position: 'bottom', align: 'start'}, tooltip: {callbacks: {label: function (c) { return ' ' + c.dataset.label + ': ' + (c.parsed.y === null ? '—' : c.parsed.y.toLocaleString('pt-BR') + '%'); }}}},
+              scales: {x: x, y: y({min: 0, max: 100, ticks: {padding: 8, callback: function (v) { return v + '%'; }}})}}
+  });
+  <?php endif; ?>
 
   var dist = <?= json_encode(array_values($dist)) ?>, totD = dist.reduce(function (a, b) { return a + b; }, 0) || 1;
   new Chart(document.getElementById('gNotas'), {

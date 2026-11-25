@@ -171,15 +171,32 @@ function chamarIA($sistema, $usuario)
     throw new RuntimeException('IA indisponível após várias tentativas');
 }
 
+/** Extrai o objeto JSON da resposta da IA, tolerando blocos ```json, comentários e vírgulas sobrando. null se não der. */
+function jsonIA($txt)
+{
+    $ini = strpos((string)$txt, '{');
+    $fim = strrpos((string)$txt, '}');
+    if ($ini === false || $fim === false || $fim < $ini) {
+        return null;
+    }
+    $s = substr($txt, $ini, $fim - $ini + 1);
+    $d = json_decode($s, true);
+    if (is_array($d)) {
+        return $d;
+    }
+    $s = preg_replace('~^\s*//.*$~m', '', $s);          // linhas só de comentário
+    $s = preg_replace('/,\s*([}\]])/', '$1', $s);        // vírgula antes de } ou ]
+    $d = json_decode($s, true);
+    return is_array($d) ? $d : null;
+}
+
 /** Extrai e valida o JSON devolvido pela IA */
 function interpretarIA($txt)
 {
-    $ini = strpos($txt, '{');
-    $fim = strrpos($txt, '}');
-    if ($ini === false || $fim === false) {
+    $d = jsonIA($txt);
+    if ($d === null) {
         throw new RuntimeException('IA não devolveu JSON');
     }
-    $d = json_decode(substr($txt, $ini, $fim - $ini + 1), true);
     if (!is_array($d) || !g($d, 'motivo_principal')) {
         throw new RuntimeException('JSON da IA inválido');
     }
