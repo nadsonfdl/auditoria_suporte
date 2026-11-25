@@ -16,7 +16,25 @@ if (!hash_equals((string)cfg('webhook_token'), $token)) {
     exit;
 }
 
-$p = json_decode(file_get_contents('php://input'), true);
+$corpo = file_get_contents('php://input');
+
+// Assinatura do Chatwoot (se webhook_secret estiver configurado):
+//   X-Chatwoot-Signature: sha256=HMAC_SHA256(secret, "<X-Chatwoot-Timestamp>.<corpo bruto>")
+$secret = (string)cfg('webhook_secret');
+if ($secret !== '') {
+    $tsH  = isset($_SERVER['HTTP_X_CHATWOOT_TIMESTAMP']) ? (string)$_SERVER['HTTP_X_CHATWOOT_TIMESTAMP'] : '';
+    $sigH = isset($_SERVER['HTTP_X_CHATWOOT_SIGNATURE']) ? (string)$_SERVER['HTTP_X_CHATWOOT_SIGNATURE'] : '';
+    $esperado = 'sha256=' . hash_hmac('sha256', $tsH . '.' . $corpo, $secret);
+    // janela larga (padrão 1 dia) para aceitar os reenvios automáticos do Chatwoot
+    $janela = cfg('webhook_janela_seg') ? (int)cfg('webhook_janela_seg') : 86400;
+    if ($tsH === '' || !ctype_digit($tsH) || !hash_equals($esperado, $sigH) || abs(time() - (int)$tsH) > $janela) {
+        http_response_code(401);
+        echo '{"erro":"assinatura"}';
+        exit;
+    }
+}
+
+$p = json_decode($corpo, true);
 if (!is_array($p)) {
     http_response_code(400);
     echo '{"erro":"json"}';

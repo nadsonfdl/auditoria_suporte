@@ -10,7 +10,8 @@ cd "$DIR"
 echo "== $(date '+%F %T') atualizando $DIR"
 
 # 1. Código: só avança se não houver conflito (nunca sobrescreve alteração local sem avisar)
-git fetch --quiet origin main
+# "git fetch origin" (sem refspec) para funcionar no git 1.8 do CentOS 7, que não atualiza origin/main com refspec explícito
+git fetch --quiet origin
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "ERRO: há alterações locais não commitadas. Veja 'git status' antes de atualizar."
   exit 1

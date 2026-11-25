@@ -6,6 +6,7 @@ return [
     'account_id'    => 3,                              // conta do suporte
     'api_token'     => 'TOKEN_DE_UM_ADMIN_DA_CONTA_3', // Perfil -> Token de acesso
     'webhook_token' => 'GERE_UMA_STRING_ALEATORIA',    // ex: openssl rand -hex 24
+    'webhook_secret' => '',                            // secret do webhook no iTalk (GET /webhooks); vazio = não valida assinatura
 
     // Primeira carga busca a partir desta data
     'carga_inicio'  => '2026-10-01',

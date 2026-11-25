@@ -82,6 +82,8 @@ Detalhes do iTalk (validados em 25/11/2026):
      -d '{"webhook":{"url":"https://SEU-SERVIDOR/auditoria_suporte/public/webhook.php?token=WEBHOOK_TOKEN","subscriptions":["conversation_created","conversation_status_changed","conversation_updated"]}}'
    ```
    Conferir: `SELECT * FROM auditoria.webhook_eventos ORDER BY id DESC LIMIT 5;`
+   **Assinatura**: copie o `secret` do webhook (GET `/api/v1/accounts/3/webhooks`) para `webhook_secret` no `config.php`.
+   Com ele preenchido, o endpoint só aceita eventos com `X-Chatwoot-Signature` válida (HMAC-SHA256 de `"<timestamp>.<corpo>"`), além do token.
 8. **Metabase** (usuário `metabase_auditoria`, ver fim do `sql/01_schema.sql`):
    - **Auditor resolução** → `auditoria.vw_indicador_resolucao_semanal`
    - Detalhe por atendente/time/caixa → `auditoria.vw_conversas`
