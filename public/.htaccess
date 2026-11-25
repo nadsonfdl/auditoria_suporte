@@ -1,4 +1,4 @@
 Require all denied
-<Files "webhook.php">
+<FilesMatch "^(webhook|painel)\.php$">
     Require all granted
-</Files>
+</FilesMatch>

@@ -9,17 +9,24 @@ O banco do iTalk **não é alterado**: tudo fica num banco de análise separado 
 auditoria_suporte/
 ├── .htaccess              # bloqueia o projeto inteiro na web
 ├── public/
-│   ├── .htaccess          # libera SOMENTE webhook.php
-│   └── webhook.php        # recebe eventos de status das conversas (tempo real)
+│   ├── .htaccess          # libera SOMENTE webhook.php e painel.php
+│   ├── webhook.php        # recebe eventos de status das conversas (tempo real)
+│   └── painel.php         # painel de BI (login, visão geral, atendentes, fila de auditoria)
 ├── bin/
 │   ├── sync_api.php       # sincronização via API (cron a cada 15 min)
-│   └── analisar_ia.php    # análise de IA das notas baixas (cron)
+│   ├── analisar_ia.php    # análise de IA das notas baixas (cron)
+│   ├── criar_usuario.php  # gera usuário/senha do painel
+│   └── atualizar.sh       # atualiza o servidor pela main
 ├── src/
 │   ├── lib.php            # funções compartilhadas (API, banco, mapeamento)
-│   └── ia.php             # transcrição, máscara de dados pessoais, chamada à IA
+│   ├── ia.php             # transcrição, máscara de dados pessoais, chamada à IA
+│   ├── painel.php         # consultas do painel de BI
+│   └── vendor/            # Chart.js 4.4.1 (MIT), embutido na página — sem CDN
 ├── sql/
 │   ├── 01_schema.sql      # tabelas, fila CSAT e views do Metabase
-│   └── 02_ia.sql          # colunas da análise de IA + view de motivos
+│   ├── 02_ia.sql          # colunas da análise de IA + view de motivos
+│   ├── 03_painel.sql      # views do painel de BI
+│   └── 99_permissoes.sql  # grants do Metabase (roda por último)
 ├── config/
 │   ├── config.example.php # modelo
 │   └── config.php         # (não versionado) token, senha, etc.
@@ -99,6 +106,26 @@ cd /var/www/webroot/ROOT/auditoria_suporte && bash bin/atualizar.sh
 O script faz `fetch` + `merge --ff-only` da `main` (recusa se houver alteração local no servidor), valida a sintaxe
 PHP com o PHP do servidor e reaplica `sql/*.sql` em ordem (todos idempotentes; `99_permissoes.sql` refaz os grants do Metabase).
 Alterações de banco novas = novo arquivo `sql/NN_descricao.sql`. Nunca editar código direto no servidor.
+
+## Painel de BI
+
+`https://SEU-SERVIDOR/auditoria_suporte/painel.php` — login próprio (sessão + CSRF), três abas:
+
+- **Visão geral**: KPIs com comparação ao período anterior (conversas, % resolvidas no sistema, % resolvidas sem reabrir,
+  tempo mediano até a 1ª resposta, CSAT médio, notas baixas), volume, taxa de resolução, mapa de calor dia × hora,
+  tempo de 1ª resposta, CSAT, distribuição das notas, volume por caixa e a seção **"Por que as notas são baixas"** (IA).
+- **Atendentes**: ranking ordenável (conversas, % resolvidas, reaberturas, 1ª resposta, CSAT, notas baixas, motivo mais comum).
+- **Auditoria CSAT**: fila do supervisor com a análise da IA, classificação (pré-preenchida pela IA), observação,
+  exportação CSV para o pós-vendas e "marcar semana como enviada".
+
+Filtros: 7/30/90 dias, tudo ou datas livres; atendente, time e caixa de entrada.
+
+Criar usuário:
+```bash
+php bin/criar_usuario.php marcelo 'SenhaForte123'   # cola a linha gerada em 'painel_usuarios' no config/config.php
+```
+No Apache, além do webhook, publique só o arquivo do painel (mesmo padrão do conf.d):
+`Alias /auditoria_suporte/painel.php /var/www/webroot/ROOT/auditoria_suporte/public/painel.php`
 
 ## Análise de IA das notas baixas
 

@@ -22,4 +22,9 @@ return [
     'ia_model'    => 'claude-haiku-5-5',   // se openai: o modelo que vocês já usam (ex.: o da Guta)
     'ia_lote'     => 20,                   // itens por execução
     // 'ia_base_url' => '',                // opcional: proxy/endpoint compatível
+
+    // Painel de BI (public/painel.php). Gere cada linha com: php bin/criar_usuario.php nome 'senha'
+    'painel_usuarios' => array(
+        // 'marcelo' => '$2y$10$...',
+    ),
 ];
