@@ -14,4 +14,11 @@ return [
     'db_dsn'  => 'pgsql:host=127.0.0.1;port=5432;dbname=auditoria_suporte',
     'db_user' => 'auditoria_app',
     'db_pass' => 'TROQUE',
+
+    // IA — análise das notas baixas (bin/analisar_ia.php). Deixe ia_api_key vazio para desligar.
+    'ia_provider' => 'anthropic',          // 'anthropic' ou 'openai'
+    'ia_api_key'  => '',
+    'ia_model'    => 'claude-haiku-5-5',   // se openai: o modelo que vocês já usam (ex.: o da Guta)
+    'ia_lote'     => 20,                   // itens por execução
+    // 'ia_base_url' => '',                // opcional: proxy/endpoint compatível
 ];

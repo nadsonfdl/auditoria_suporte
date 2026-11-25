@@ -12,11 +12,14 @@ auditoria_suporte/
 │   ├── .htaccess          # libera SOMENTE webhook.php
 │   └── webhook.php        # recebe eventos de status das conversas (tempo real)
 ├── bin/
-│   └── sync_api.php       # sincronização via API (cron a cada 15 min)
+│   ├── sync_api.php       # sincronização via API (cron a cada 15 min)
+│   └── analisar_ia.php    # análise de IA das notas baixas (cron)
 ├── src/
-│   └── lib.php            # funções compartilhadas (API, banco, mapeamento)
+│   ├── lib.php            # funções compartilhadas (API, banco, mapeamento)
+│   └── ia.php             # transcrição, máscara de dados pessoais, chamada à IA
 ├── sql/
-│   └── 01_schema.sql      # tabelas, fila CSAT e views do Metabase
+│   ├── 01_schema.sql      # tabelas, fila CSAT e views do Metabase
+│   └── 02_ia.sql          # colunas da análise de IA + view de motivos
 ├── config/
 │   ├── config.example.php # modelo
 │   └── config.php         # (não versionado) token, senha, etc.
@@ -84,6 +87,28 @@ Detalhes do iTalk (validados em 25/11/2026):
    - Detalhe por atendente/time/caixa → `auditoria.vw_conversas`
    - **Fila CSAT** → Model sobre `auditoria.csat_auditoria` + *Model actions* (Update: `status, classificacao, observacao, supervisor, avaliado_em`). Metabase ≥ 46.
    - **E-mail pós-vendas** → pergunta em `auditoria.vw_csat_fila` com `status = 'avaliado'` da semana anterior + *Subscription* semanal.
+
+## Análise de IA das notas baixas
+
+Para cada item da fila de CSAT baixo, `bin/analisar_ia.php`:
+1. busca a conversa completa pela API (`/conversations/{id}/messages`, paginando);
+2. monta a transcrição (cliente / Guta / atendente / notas internas / eventos do sistema) e **mascara e-mail, telefone, CPF e CNPJ**;
+3. envia ao modelo de IA configurado (Anthropic ou OpenAI) junto com a nota e o comentário do cliente;
+4. grava em `auditoria.csat_auditoria`: `ia_motivo`, `ia_categoria`, `ia_responsavel`, `ia_gravidade`, `ia_resumo`, `ia_evidencias`, `ia_sugestao`, `ia_confianca`.
+
+O supervisor vê a análise pronta na fila (`vw_csat_fila`) e só confirma/ajusta a `classificacao` e a `observacao`.
+`auditoria.vw_csat_motivos_ia` agrega por categoria/responsável/atendente para o gráfico "Por que as notas são baixas".
+
+Instalação:
+```bash
+psql -h 127.0.0.1 -U auditoria_app -d auditoria_suporte -f sql/02_ia.sql
+# config/config.php: ia_provider, ia_api_key, ia_model
+php bin/analisar_ia.php
+# cron, logo depois do sync:
+5,20,35,50 * * * * php /CAMINHO/auditoria_suporte/bin/analisar_ia.php >> /var/log/auditoria_ia.log 2>&1
+```
+Até 3 tentativas por item (erro fica em `ia_erro`). Reanalisar: `UPDATE auditoria.csat_auditoria SET ia_analisado_em = NULL, ia_tentativas = 0 WHERE id = X;`
+O servidor precisa de saída HTTPS para `api.anthropic.com` ou `api.openai.com`.
 
 ## Indicador
 
