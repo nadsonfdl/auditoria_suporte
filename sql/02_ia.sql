@@ -21,8 +21,9 @@ ALTER TABLE auditoria.csat_auditoria
 CREATE INDEX IF NOT EXISTS ix_csat_aud_ia_pend
   ON auditoria.csat_auditoria (respondido_em) WHERE ia_analisado_em IS NULL;
 
--- Fila do supervisor agora traz a análise da IA (colunas novas no fim, exigência do CREATE OR REPLACE VIEW)
-CREATE OR REPLACE VIEW auditoria.vw_csat_fila AS
+-- Fila do supervisor agora traz a análise da IA
+DROP VIEW IF EXISTS auditoria.vw_csat_fila;
+CREATE VIEW auditoria.vw_csat_fila AS
 SELECT q.id, q.semana_ref, q.status, q.rating AS nota, q.feedback_cliente,
        q.respondido_em AT TIME ZONE 'America/Sao_Paulo' AS respondido_em,
        a.name AS atendente, ct.name AS cliente, ct.phone_number AS telefone, ct.email AS email_cliente,

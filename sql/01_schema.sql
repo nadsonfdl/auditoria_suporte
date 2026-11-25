@@ -136,7 +136,9 @@ FROM auditoria.vw_conversas
 GROUP BY semana;
 
 -- Fila do supervisor / lista do pós-vendas (com link direto pra conversa)
-CREATE OR REPLACE VIEW auditoria.vw_csat_fila AS
+-- (DROP antes porque o 02_ia.sql acrescenta colunas; assim rodar todos os SQLs de novo nunca quebra)
+DROP VIEW IF EXISTS auditoria.vw_csat_fila;
+CREATE VIEW auditoria.vw_csat_fila AS
 SELECT q.id, q.semana_ref, q.status, q.rating AS nota, q.feedback_cliente,
        q.respondido_em AT TIME ZONE 'America/Sao_Paulo' AS respondido_em,
        a.name AS atendente, ct.name AS cliente, ct.phone_number AS telefone, ct.email AS email_cliente,
