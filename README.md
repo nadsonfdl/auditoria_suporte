@@ -21,6 +21,7 @@ auditoria_suporte/
 │   ├── lib.php            # funções compartilhadas (API, banco, mapeamento)
 │   ├── ia.php             # transcrição, máscara de dados pessoais, chamada à IA
 │   ├── painel.php         # consultas do painel de BI
+│   ├── views/             # telas do painel (login, diagnóstico, atendentes, fila)
 │   └── vendor/            # Chart.js 4.4.1 (MIT), embutido na página — sem CDN
 ├── sql/
 │   ├── 01_schema.sql      # tabelas, fila CSAT e views do Metabase
@@ -111,7 +112,7 @@ Alterações de banco novas = novo arquivo `sql/NN_descricao.sql`. Nunca editar 
 
 `https://SEU-SERVIDOR/auditoria_suporte/painel.php` — login próprio (sessão + CSRF), três abas:
 
-- **Visão geral**: KPIs com comparação ao período anterior (conversas, % resolvidas no sistema, % resolvidas sem reabrir,
+- **Diagnóstico**: frase-resumo gerada dos dados, a diferença entre "encerrada no sistema" e "cliente satisfeito", KPIs com comparação ao período anterior e minigráficos (conversas, % resolvidas no sistema, % resolvidas sem reabrir,
   tempo mediano até a 1ª resposta, CSAT médio, notas baixas), volume, taxa de resolução, mapa de calor dia × hora,
   tempo de 1ª resposta, CSAT, distribuição das notas, volume por caixa e a seção **"Por que as notas são baixas"** (IA).
 - **Atendentes**: ranking ordenável (conversas, % resolvidas, reaberturas, 1ª resposta, CSAT, notas baixas, motivo mais comum).

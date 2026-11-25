@@ -333,3 +333,15 @@ function itensFila($semana, $status, $atendente)
                        CASE q.ia_gravidade WHEN 'alta' THEN 0 WHEN 'media' THEN 1 ELSE 2 END,
                        q.respondido_em DESC", $p);
 }
+
+function ultimaSync()
+{
+    $r = q1("SELECT max(atualizado_em) AS t FROM auditoria.sync_control");
+    return !empty($r['t']) ? $r['t'] : null;
+}
+
+/** Inicial do nome (UTF-8, sem depender da extensão mbstring) */
+function mb_substr_compat($s)
+{
+    return preg_match('/^./u', trim((string)$s), $m) ? strtoupper($m[0]) : '?';
+}
