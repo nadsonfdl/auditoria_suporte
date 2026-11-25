@@ -88,6 +88,16 @@ Detalhes do iTalk (validados em 25/11/2026):
    - **Fila CSAT** → Model sobre `auditoria.csat_auditoria` + *Model actions* (Update: `status, classificacao, observacao, supervisor, avaliado_em`). Metabase ≥ 46.
    - **E-mail pós-vendas** → pergunta em `auditoria.vw_csat_fila` com `status = 'avaliado'` da semana anterior + *Subscription* semanal.
 
+## Atualização (fluxo git)
+
+Desenvolvimento acontece na branch `main` do GitHub. No servidor:
+```bash
+cd /var/www/webroot/ROOT/auditoria_suporte && bash bin/atualizar.sh
+```
+O script faz `fetch` + `merge --ff-only` da `main` (recusa se houver alteração local no servidor), valida a sintaxe
+PHP com o PHP do servidor e reaplica `sql/*.sql` em ordem (todos idempotentes; `99_permissoes.sql` refaz os grants do Metabase).
+Alterações de banco novas = novo arquivo `sql/NN_descricao.sql`. Nunca editar código direto no servidor.
+
 ## Análise de IA das notas baixas
 
 Para cada item da fila de CSAT baixo, `bin/analisar_ia.php`:
