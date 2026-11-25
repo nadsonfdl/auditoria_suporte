@@ -43,6 +43,14 @@ Detalhes do iTalk (validados em 25/11/2026):
 - Rack::Attack ativo: 3000 req/min por IP (o sync faz pausa entre páginas). Cloudflare na frente.
 - Já existe o webhook "IA Guta" na conta 3; o da auditoria é um segundo webhook, independente.
 
+## Requisitos
+
+- **PHP 5.6+** com `pdo_pgsql` e `curl` (o código é compatível com 5.6, verificado com PHPCompatibility).
+- **PostgreSQL 9.5+** para o banco de análise.
+  Se o PHP 5.6 não conseguir autenticar no Postgres (erro de SCRAM), o `libpq` dele é antigo: crie a senha do usuário com `md5`
+  (`SET password_encryption = 'md5'; ALTER ROLE auditoria_app PASSWORD '...';`) e use `md5` no `pg_hba.conf` para esse usuário.
+- Apache com `AllowOverride All` (ou `AuthConfig`) na pasta do projeto.
+
 ## Instalação
 
 1. **Código**: clonar dentro da pasta web (`.../code/auditoria_suporte`).
