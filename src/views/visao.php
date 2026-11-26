@@ -44,6 +44,8 @@ $lacuna = array(
 .lacuna .l-sis i{background:#a8b2c2}.lacuna .l-real i{background:#a5d3e3}.lacuna .l-ia i{background:#45a0c1}.lacuna .l-cli i{background:var(--pri)}
 .lacuna .linha:nth-child(3) .trilho i{animation-delay:.12s}.lacuna .linha:nth-child(4) .trilho i{animation-delay:.24s}.lacuna .linha:nth-child(5) .trilho i{animation-delay:.36s}
 .lacuna small{color:var(--tinta-3);font-size:12px}
+.lacuna .detalhar{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;margin:0 0 14px;font-size:13px;font-weight:500;color:var(--pri-2);text-decoration:none;border-bottom:1px solid transparent}
+.lacuna .detalhar:hover{border-bottom-color:currentColor}
 .lacuna .conclusao{margin-top:auto;padding-top:14px;border-top:1px dashed #d3dae5;color:var(--tinta-2);font-size:13px}
 .lacuna .conclusao b{color:var(--tinta)}
 @keyframes crescer{to{width:var(--w)}}
@@ -113,6 +115,10 @@ $lacuna = array(
         <small><?= h($l[2]) ?></small>
       </div>
     <?php endforeach; ?>
+    <?php if ((int)$kq['conclusivas']): ?>
+      <a class="detalhar" href="<?= h(url(array('p' => 'conversas'))) ?>">Ver o detalhamento da resolução real
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></a>
+    <?php endif; ?>
     <?php if ($GAP !== null): ?>
       <div class="conclusao"><?php if ($kq['conclusivas'] && $taxaReal !== null && $taxaRes !== null): ?><b><?= number_format(abs($taxaRes - $taxaReal), 1, ',', '.') ?> pontos</b> separam o que o sistema encerra do que foi resolvido de fato.<?php else: ?><b><?= number_format(abs($GAP), 1, ',', '.') ?> pontos</b> separam o que o sistema encerra do que o cliente aprova.<?php endif; ?></div>
     <?php endif; ?>

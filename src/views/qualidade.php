@@ -76,7 +76,7 @@ $realHum  = $kq['com_humano'] ? taxa($kq['com_humano_resolvidas'], $kq['com_huma
   </div>
   <div class="ind">
     <div class="rot">Resolvidas de fato <?= explica('resolucao_real') ?></div>
-    <div class="val"><?= pct($taxaReal) ?></div>
+    <div class="val"><a href="<?= h(url(array('p' => 'conversas'))) ?>" style="color:inherit;text-decoration:none" title="Ver o detalhamento"><?= pct($taxaReal) ?></a></div>
     <div class="baixo"><?= delta($taxaReal, $taxaRealA, 'pp', true) ?><?= metaHtml($taxaReal, conf('meta_resolucao_real_pct'), true, conf('meta_resolucao_real_pct') . '%') ?></div>
   </div>
   <div class="ind">
@@ -101,6 +101,7 @@ $realHum  = $kq['com_humano'] ? taxa($kq['com_humano_resolvidas'], $kq['com_huma
   </div>
 </section>
 
+<a class="btn" href="<?= h(url(array('p' => 'conversas'))) ?>" style="margin:-4px 0 16px">Entender a resolução real e validar conversas</a>
 <div class="grade">
   <div class="painel c8">
     <h3 class="cab-painel">Resolução real ao longo do tempo <?= explica('resolucao_real') ?></h3><p class="leg">% das conversas que a IA confirmou como resolvidas, por <?= $F['grao'] === 'dia' ? 'dia' : 'semana' ?></p>
@@ -161,7 +162,10 @@ $realHum  = $kq['com_humano'] ? taxa($kq['com_humano_resolvidas'], $kq['com_huma
   </div>
 
   <div class="painel c12" id="qualidade" data-tour="4" data-tour-titulo="Conversas que pedem atenção" data-tour-texto="Conversas com risco alto ou não resolvidas, inclusive de clientes que não deram nota. Leve as que importam para a auditoria do supervisor.">
-    <h3 class="cab-painel">Conversas que pedem atenção <?= explica('conversas_risco') ?></h3><p class="leg">Risco alto ou não resolvidas, priorizando quem não deu nota</p>
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+      <div><h3 class="cab-painel">Conversas que pedem atenção <?= explica('conversas_risco') ?></h3><p class="leg">Risco alto ou não resolvidas, priorizando quem não deu nota</p></div>
+      <a class="btn" href="<?= h(url(array('p' => 'conversas'))) ?>">Ver todas as conversas auditadas</a>
+    </div>
     <?php if ($risc): foreach ($risc as $r): $falhas = json_decode((string)$r['falhas'], true); $f0 = is_array($falhas) && $falhas ? $falhas[0] : null; ?>
       <div class="risco" id="conv-<?= (int)$r['conversation_id'] ?>">
         <div class="nq <?= $r['risco'] === 'alto' ? '' : 'medio' ?>" title="Nota de qualidade"><?= $r['nota_qa'] === null ? '—' : (int)$r['nota_qa'] ?></div>

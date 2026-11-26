@@ -115,7 +115,7 @@ if (empty($_SESSION['usuario'])) {
 $USUARIO = $_SESSION['usuario'];
 $ADMINS  = cfg('painel_admins');
 $ADMIN   = !is_array($ADMINS) || !$ADMINS || in_array($USUARIO, $ADMINS, true);   // sem lista de admins, todos administram
-$PAGINAS = array('visao', 'qualidade', 'atendentes', 'fila', 'config');
+$PAGINAS = array('visao', 'qualidade', 'conversas', 'atendentes', 'fila', 'config');
 $pagina  = isset($_GET['p']) && in_array($_GET['p'], $PAGINAS, true) ? $_GET['p'] : 'visao';
 if ($pagina === 'config' && !$ADMIN) {
     $pagina = 'visao';
@@ -190,6 +190,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute(array($txt('retorno') !== '' ? $txt('retorno') : null, $tratado ? 'true' : 'false', $tratado ? 'true' : 'false', $tratado ? 'true' : 'false', $USUARIO, $id));
         aviso($tratado ? 'Caso marcado como tratado.' : 'Retorno salvo.');
         voltar('#item-' . $id);
+    }
+    // ---- conversas: validação humana do veredito da IA (corrige o indicador e mede a precisão da IA)
+    if ($acao === 'validar' && $id && in_array($txt('humano'), array('sim', 'parcial', 'nao'), true)) {
+        db()->prepare("INSERT INTO auditoria.qa_validacao (conversation_id, usuario, ia_resolvido, humano_resolvido, comentario)
+                       SELECT ?, ?, resolvido, ?, ? FROM auditoria.qa_conversas WHERE conversation_id = ?
+                       ON CONFLICT (conversation_id) DO UPDATE SET usuario = EXCLUDED.usuario, humano_resolvido = EXCLUDED.humano_resolvido,
+                         comentario = EXCLUDED.comentario, criado_em = now()")
+            ->execute(array($id, $USUARIO, $txt('humano'), $txt('comentario') !== '' ? $txt('comentario') : null, $id));
+        aviso('Validação registrada. O indicador já considera a sua avaliação.');
+        voltar('#conv-' . $id);
+    }
+    if ($acao === 'desfazer_validacao' && $id) {
+        db()->prepare("DELETE FROM auditoria.qa_validacao WHERE conversation_id = ?")->execute(array($id));
+        aviso('Validação removida. Vale de novo o veredito da IA.');
+        voltar('#conv-' . $id);
     }
     // ---- qualidade: levar uma conversa auditada pela IA para a fila do supervisor
     if ($acao === 'levar_fila' && $id) {
@@ -394,6 +409,14 @@ if ($pagina === 'qualidade') {
     $risc = conversasEmRisco($F, 12);
     $taxaReal  = taxa($kq['resolvidas'], $kq['conclusivas']);
     $taxaRealA = taxa($kqa['resolvidas'], $kqa['conclusivas']);
+}
+if ($pagina === 'conversas') {
+    $X   = filtrosConversas();
+    $PG  = isset($_GET['pg']) && ctype_digit((string)$_GET['pg']) ? max(1, (int)$_GET['pg']) : 1;
+    list($TOTAL_CONV, $CONVS) = listaConversas($F, $X, $PG, 30);
+    $DEC = decomposicaoQa($F, $X);
+    $PREC = precisaoIa();
+    $kq = kpisQa($F, $F['ini'], $F['fim']);
 }
 if ($pagina === 'config') {
     $ENVIOS = q("SELECT * FROM auditoria.envios ORDER BY id DESC LIMIT 25");

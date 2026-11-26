@@ -1,5 +1,5 @@
 <?php
-$TITULOS = array('visao' => 'Diagnóstico do suporte', 'qualidade' => 'Qualidade dos atendimentos', 'atendentes' => 'Atendentes',
+$TITULOS = array('visao' => 'Diagnóstico do suporte', 'qualidade' => 'Qualidade dos atendimentos', 'conversas' => 'Conversas auditadas pela IA', 'atendentes' => 'Atendentes',
                  'fila' => 'Auditoria de notas baixas', 'config' => 'Configurações');
 $sync = ultimaSync();
 $icone = array(
@@ -257,7 +257,8 @@ body.apresentar .sair-apresentacao{display:inline-flex}
   </a>
   <nav class="nav" aria-label="Seções" data-tour="20" data-tour-titulo="As telas do painel" data-tour-texto="Diagnóstico para a visão geral, Qualidade para a auditoria de todas as conversas pela IA, Atendentes para cada pessoa, Auditoria CSAT para o trabalho semanal do supervisor e Configurações para ligar envios e metas.">
     <?php foreach ($NAV as $k => $v): ?>
-      <a href="<?= h(url(array('p' => $k), $k === 'fila' ? array() : array('semana', 'status'))) ?>" class="<?= $pagina === $k ? 'ativa' : '' ?>" <?= $pagina === $k ? 'aria-current="page"' : '' ?>>
+      <?php $ativa = $pagina === $k || ($k === 'qualidade' && $pagina === 'conversas'); ?>
+      <a href="<?= h(url(array('p' => $k), $k === 'fila' ? array() : array('semana', 'status', 'res', 'risco', 'quem', 'nota', 'semresp', 'validado', 'motivo', 'falha', 'pg'))) ?>" class="<?= $ativa ? 'ativa' : '' ?>" <?= $ativa ? 'aria-current="page"' : '' ?>>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><?= $icone[$k] ?></svg>
         <span class="r-longo"><?= $v ?></span><span class="r-curto"><?= $CURTO[$k] ?></span>
         <?php if ($k === 'fila' && $PEND_TOTAL): ?><span class="badge" title="<?= (int)$PEND_TOTAL ?> notas baixas aguardando avaliação"><?= (int)$PEND_TOTAL ?></span><?php endif; ?>
@@ -295,6 +296,7 @@ body.apresentar .sair-apresentacao{display:inline-flex}
   <?php if ($pagina !== 'config'): ?>
   <form class="filtros" method="get" id="filtros" data-tour="4" data-tour-titulo="Filtre como quiser" data-tour-texto="Período, atendente, time e caixa de entrada. Todos os números e gráficos da tela se ajustam ao filtro.">
     <input type="hidden" name="p" value="<?= h($pagina) ?>">
+    <?php if ($pagina === 'conversas'): foreach ($X as $xk => $xv): if ($xv !== ''): ?><input type="hidden" name="<?= h($xk) ?>" value="<?= h($xv) ?>"><?php endif; endforeach; endif; ?>
     <?php if ($pagina !== 'fila'): ?>
       <div class="seg" role="group" aria-label="Período">
         <?php foreach (array('7' => '7 dias', '30' => '30 dias', '90' => '90 dias', 'tudo' => 'Tudo') as $k => $v): ?>

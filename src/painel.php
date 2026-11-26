@@ -544,3 +544,96 @@ function metaHtml($valor, $meta, $maiorMelhor, $fmtMeta)
     list($cl, $txt) = semaforo($valor, $meta, $maiorMelhor, 'meta ' . $fmtMeta);
     return $cl ? ' <span class="meta ' . $cl . '">' . h($txt) . '</span>' : '';
 }
+
+// ---------------------------------------------------------------- detalhamento das conversas auditadas
+/** Filtros próprios da tela de conversas (além de período/atendente/time/caixa) */
+function filtrosConversas()
+{
+    $ok = function ($k, $permitidos) {
+        return isset($_GET[$k]) && in_array((string)$_GET[$k], $permitidos, true) ? (string)$_GET[$k] : '';
+    };
+    return array(
+        'res'      => $ok('res', array('sim', 'parcial', 'nao', 'incerto')),
+        'risco'    => $ok('risco', array('alto', 'medio', 'baixo')),
+        'quem'     => $ok('quem', array('guta', 'humano')),
+        'nota'     => $ok('nota', array('com', 'sem')),
+        'semresp'  => $ok('semresp', array('1')),
+        'validado' => $ok('validado', array('sim', 'nao', 'discorda')),
+        'motivo'   => $ok('motivo', array_keys($GLOBALS['MOTIVOS_CONTATO'])),
+        'falha'    => $ok('falha', array_keys($GLOBALS['CATEGORIAS'])),
+    );
+}
+
+function whereConversas($F, $X, &$p)
+{
+    $w = where($F, $F['ini'], $F['fim'], $p);
+    if ($X['res'] !== '') { $w .= ' AND resolvido = ?'; $p[] = $X['res']; }
+    if ($X['risco'] !== '') { $w .= ' AND risco = ?'; $p[] = $X['risco']; }
+    if ($X['quem'] === 'guta') { $w .= ' AND NOT teve_humano'; }
+    if ($X['quem'] === 'humano') { $w .= ' AND teve_humano'; }
+    if ($X['nota'] === 'com') { $w .= ' AND nota_csat IS NOT NULL'; }
+    if ($X['nota'] === 'sem') { $w .= ' AND nota_csat IS NULL'; }
+    if ($X['semresp'] === '1') { $w .= ' AND cliente_sem_resposta'; }
+    if ($X['validado'] === 'sim') { $w .= ' AND humano_resolvido IS NOT NULL'; }
+    if ($X['validado'] === 'nao') { $w .= ' AND humano_resolvido IS NULL'; }
+    if ($X['validado'] === 'discorda') { $w .= ' AND humano_resolvido IS NOT NULL AND humano_resolvido <> resolvido_ia'; }
+    if ($X['motivo'] !== '') { $w .= ' AND motivo_contato = ?'; $p[] = $X['motivo']; }
+    if ($X['falha'] !== '') { $w .= " AND categoria_falha = ? AND resolvido IN ('nao','parcial')"; $p[] = $X['falha']; }
+    return $w;
+}
+
+function listaConversas($F, $X, $pagina, $porPagina)
+{
+    $p = array();
+    $w = whereConversas($F, $X, $p);
+    $tot = q1("SELECT count(*) AS n FROM auditoria.vw_painel_qa WHERE $w", $p);
+    $rows = q("SELECT * FROM auditoria.vw_painel_qa WHERE $w ORDER BY criada_em DESC
+               LIMIT " . (int)$porPagina . " OFFSET " . (int)(($pagina - 1) * $porPagina), $p);
+    return array((int)$tot['n'], $rows);
+}
+
+/** Decomposição do veredito: total, por quem atendeu, por assunto e motivos de não resolução */
+function decomposicaoQa($F, $X)
+{
+    $p = array();
+    $w = whereConversas($F, $X, $p);
+    $res = q("SELECT resolvido AS k, count(*) AS n FROM auditoria.vw_painel_qa WHERE $w GROUP BY 1", $p);
+    $quem = q("SELECT CASE WHEN teve_humano THEN 'humano' ELSE 'guta' END AS quem, resolvido AS k, count(*) AS n
+               FROM auditoria.vw_painel_qa WHERE $w GROUP BY 1, 2", $p);
+    $assunto = q("SELECT motivo_contato AS m, resolvido AS k, count(*) AS n FROM auditoria.vw_painel_qa WHERE $w GROUP BY 1, 2", $p);
+    $falhas = q("SELECT categoria_falha AS k, count(*) AS n FROM auditoria.vw_painel_qa
+                 WHERE $w AND resolvido IN ('nao','parcial') AND categoria_falha IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 8", $p);
+    $nota = q("SELECT CASE WHEN nota_csat IS NULL THEN 'sem' WHEN nota_csat >= 4 THEN 'boa' ELSE 'baixa' END AS g, resolvido AS k, count(*) AS n
+               FROM auditoria.vw_painel_qa WHERE $w GROUP BY 1, 2", $p);
+    $agrupa = function ($rows, $chave) {
+        $o = array();
+        foreach ($rows as $r) {
+            $g = $r[$chave];
+            if (!isset($o[$g])) {
+                $o[$g] = array('sim' => 0, 'parcial' => 0, 'nao' => 0, 'incerto' => 0, 'total' => 0);
+            }
+            $o[$g][$r['k']] = (int)$r['n'];
+            $o[$g]['total'] += (int)$r['n'];
+        }
+        return $o;
+    };
+    $t = $agrupa(array_map(function ($r) { $r['g'] = 'todas'; return $r; }, $res), 'g');
+    $assuntos = $agrupa($assunto, 'm');
+    uasort($assuntos, function ($a, $b) { return $b['total'] - $a['total']; });
+    return array(
+        'total'    => isset($t['todas']) ? $t['todas'] : array('sim' => 0, 'parcial' => 0, 'nao' => 0, 'incerto' => 0, 'total' => 0),
+        'quem'     => $agrupa($quem, 'quem'),
+        'assuntos' => $assuntos,
+        'falhas'   => $falhas,
+        'nota'     => $agrupa($nota, 'g'),
+    );
+}
+
+/** Precisão da IA medida pelas validações humanas */
+function precisaoIa()
+{
+    return q1("SELECT count(*) AS n, count(*) FILTER (WHERE humano_resolvido = ia_resolvido) AS concorda,
+                      count(*) FILTER (WHERE ia_resolvido IN ('nao','parcial') AND humano_resolvido = 'sim') AS ia_dura,
+                      count(*) FILTER (WHERE ia_resolvido = 'sim' AND humano_resolvido IN ('nao','parcial')) AS ia_branda
+               FROM auditoria.qa_validacao");
+}
