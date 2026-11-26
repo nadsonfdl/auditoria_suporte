@@ -7,8 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr;font-family:"IBM Plex Sans",system-ui,sans-serif;color:#0f1d33;background:#f4f6fa}
-.lado{background:#0f1d33;color:#e6ecf5;padding:56px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+html,body{height:100%}
+body{margin:0;min-height:100vh;display:grid;grid-template-columns:1.1fr 1fr;grid-template-rows:minmax(100vh,auto);align-items:stretch;font-family:"IBM Plex Sans",system-ui,sans-serif;color:#0f1d33;background:#f4f6fa}
+.lado{background:#0f1d33;color:#e6ecf5;padding:56px;min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
 .lado svg.pulso{position:absolute;left:0;right:0;bottom:22%;width:100%;height:120px;opacity:.5}
 .marca{display:flex;align-items:center;gap:12px;font-weight:600;font-size:15px}
 .marca span{width:34px;height:34px;border-radius:9px;background:#1b64be;display:grid;place-items:center}
@@ -24,7 +25,7 @@ input:focus{outline:3px solid #b6d5f8;border-color:#1b64be}
 button{margin-top:26px;width:100%;padding:13px;border:0;border-radius:8px;background:#1b64be;color:#fff;font:600 15px "IBM Plex Sans",sans-serif;cursor:pointer}
 button:hover{background:#14498f}button:focus-visible{outline:3px solid #b6d5f8;outline-offset:2px}
 .erro{background:#fbe9e7;color:#a2312a;padding:11px 14px;border-radius:8px;font-size:14px;margin-bottom:4px}
-@media (max-width:820px){body{grid-template-columns:1fr}.lado{padding:32px;min-height:240px}.lado svg.pulso{bottom:0}}
+@media (max-width:820px){body{grid-template-columns:1fr;grid-template-rows:auto 1fr}.lado{padding:32px;min-height:240px}.lado svg.pulso{bottom:0}}
 </style>
 </head>
 <body>
