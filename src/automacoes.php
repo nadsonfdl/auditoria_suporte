@@ -49,8 +49,8 @@ function processarAlertas()
                   . 'ao atendimento de <b>' . h($at) . '</b> em ' . date('d/m \à\s H:i', strtotime($it['respondido_em'])) . '.</p>'
                   . ($it['feedback_cliente'] ? '<p style="margin:0 0 16px;padding:10px 14px;border-left:3px solid #d6453d;background:#fbe9e7;font-family:Georgia,serif;font-style:italic;font-size:16px">' . h($it['feedback_cliente']) . '</p>' : '')
                   . ($it['ia_motivo'] ? '<p style="margin:0 0 6px;color:#5b4bc4;font-size:13px;font-weight:bold">Leitura da IA</p><p style="margin:0 0 16px;font-size:14px;line-height:1.5">' . h($it['ia_motivo']) . '</p>' : '')
-                  . '<p style="margin:0 0 6px;font-size:14px"><a href="' . h($it['link_conversa']) . '" style="color:#1b64be">Abrir a conversa no iTalk</a> &nbsp;|&nbsp; '
-                  . '<a href="' . h(linkCaso($it['id'])) . '" style="color:#1b64be">Abrir o caso na auditoria</a></p>';
+                  . '<p style="margin:0 0 6px;font-size:14px"><a href="' . h($it['link_conversa']) . '" style="color:#1e6fa6">Abrir a conversa no iTalk</a> &nbsp;|&nbsp; '
+                  . '<a href="' . h(linkCaso($it['id'])) . '" style="color:#1e6fa6">Abrir o caso na auditoria</a></p>';
             enviarEmail(conf('alerta_emails'), $assunto, emailLayout('Nova nota ' . $nota . ' no suporte', $html), array(), 'alerta');
         }
         if (confLigado('alerta_whatsapp')) {
@@ -178,7 +178,7 @@ function enviarSemanaPosVendas($semana, $usuario)
             . ($r['origem'] === 'ia' ? '<br><span style="color:#5b4bc4">Sem nota do cliente: sinalizado pela auditoria por IA.</span>' . ($r['ia_motivo'] ? ' ' . h($r['ia_motivo']) : '') : '')
             . ($r['feedback_cliente'] ? '<br><i>“' . h($r['feedback_cliente']) . '”</i>' : '')
             . ($r['observacao'] ? '<br><b>Supervisor:</b> ' . h($r['observacao']) : '')
-            . '<br><a href="' . h($r['link_conversa']) . '" style="color:#1b64be">Abrir conversa</a></td></tr>';
+            . '<br><a href="' . h($r['link_conversa']) . '" style="color:#1e6fa6">Abrir conversa</a></td></tr>';
     }
     $nIa = 0;
     foreach ($rows as $r) {

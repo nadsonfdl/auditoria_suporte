@@ -14,6 +14,30 @@ require __DIR__ . '/../src/ia.php';
 require __DIR__ . '/../src/qa.php';
 date_default_timezone_set('America/Sao_Paulo');
 
+// ---------------------------------------------------------------- imagens da marca (públicas, lista fechada)
+// painel.php?img=logo-igut-branca.png — usadas no login, na barra lateral e nos e-mails
+if (isset($_GET['img'])) {
+    $IMAGENS = array('logo-igut-branca.png', 'logo-igut.png', 'logo-gc.png', 'logo-eba.png', 'simbolo-igut.png', 'favicon.png', 'apple-touch-icon.png');
+    $arq = (string)$_GET['img'];
+    if (!in_array($arq, $IMAGENS, true)) {
+        http_response_code(404);
+        exit;
+    }
+    $caminho = __DIR__ . '/../src/assets/' . $arq;
+    $etag = '"' . md5_file($caminho) . '"';
+    header('Content-Type: image/png');
+    header('Cache-Control: public, max-age=604800');
+    header('ETag: ' . $etag);
+    header('X-Content-Type-Options: nosniff');
+    if (isset($_SERVER['HTTP_IF_NONE_MATCH']) && trim($_SERVER['HTTP_IF_NONE_MATCH']) === $etag) {
+        http_response_code(304);
+        exit;
+    }
+    header('Content-Length: ' . filesize($caminho));
+    readfile($caminho);
+    exit;
+}
+
 // ---------------------------------------------------------------- sessão e segurança
 $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
       || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');

@@ -19,7 +19,7 @@ $ROT_STATUS = array('pendente' => 'Aguardando avaliação', 'avaliado' => 'Avali
 .chip.on{background:var(--tinta);border-color:var(--tinta);color:#fff}
 .chip .q{font-variant-numeric:tabular-nums;opacity:.75}
 @media (max-width:900px){.resumo-fila{grid-template-columns:1fr}.resumo-fila .acoes{justify-content:flex-start}}
-.resumo-fila .pv{margin-top:10px;font-size:13px;color:var(--tinta-2)}
+.resumo-fila .pv{margin-top:10px;font-size:13px;color:var(--tinta-2);flex-wrap:wrap}
 .nota.ia{background:var(--violeta);font-size:12px}
 .retorno{padding:14px 20px 16px;border-top:1px solid var(--linha-2);background:#f6f9fe}
 .retorno label{display:block;font-size:12.5px;font-weight:500;color:var(--tinta-2);margin-bottom:6px}

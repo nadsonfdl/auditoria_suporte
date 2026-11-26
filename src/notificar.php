@@ -269,14 +269,16 @@ function emailLayout($titulo, $conteudoHtml, $rodape = '')
 {
     $url = h(conf('painel_url'));
     return '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>'
-        . '<body style="margin:0;padding:0;background:#f4f6fa;font-family:Arial,Helvetica,sans-serif;color:#0f1d33">'
+        . '<body style="margin:0;padding:0;background:#f4f6fa;font-family:Arial,Helvetica,sans-serif;color:#0c2133">'
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6fa;padding:24px 12px"><tr><td align="center">'
         . '<table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;background:#ffffff;border:1px solid #e2e7ef;border-radius:12px">'
-        . '<tr><td style="background:#0f1d33;border-radius:12px 12px 0 0;padding:18px 24px;color:#ffffff;font-size:15px;font-weight:bold">Auditoria do Suporte'
-        . '<span style="color:#8b9bb5;font-weight:normal"> &nbsp;iTalk, conta Suporte</span></td></tr>'
+        . '<tr><td style="background:#0a1c2c;border-radius:12px 12px 0 0;padding:16px 24px">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
+        . '<td><img src="' . $url . '?img=logo-igut-branca.png" alt="iGUT Clínicas" height="32" style="display:block;height:32px;width:auto;border:0"></td>'
+        . '<td align="right" style="color:#9cb6c9;font-size:13px">Auditoria do Suporte</td></tr></table></td></tr>'
         . '<tr><td style="padding:26px 24px 8px"><h1 style="font-family:Georgia,serif;font-weight:normal;font-size:22px;line-height:1.3;margin:0 0 14px">' . h($titulo) . '</h1>'
         . $conteudoHtml . '</td></tr>'
-        . '<tr><td style="padding:8px 24px 26px"><a href="' . $url . '" style="display:inline-block;background:#1b64be;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:11px 18px;border-radius:8px">Abrir o painel</a></td></tr>'
+        . '<tr><td style="padding:8px 24px 26px"><a href="' . $url . '" style="display:inline-block;background:#1e6fa6;color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:11px 18px;border-radius:8px">Abrir o painel</a></td></tr>'
         . '<tr><td style="border-top:1px solid #e2e7ef;padding:14px 24px;color:#78859a;font-size:12px">'
         . ($rodape !== '' ? $rodape : 'Mensagem automática da Auditoria do Suporte. Para mudar quem recebe, acesse Configurações no painel.')
         . '</td></tr></table></td></tr></table></body></html>';

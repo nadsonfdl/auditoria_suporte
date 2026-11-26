@@ -99,7 +99,7 @@ $status = array(
 .campo-cf .campo{width:100%;max-width:none}
 .campo-cf input.campo{background-image:none;padding-right:11px}
 .campo-cf textarea.campo{background-image:none;padding:8px 11px;resize:vertical;font-family:var(--sans)}
-.campo-cf small{display:block;color:var(--tinta-3);font-size:12px;margin-top:4px;line-height:1.45}
+.campo-cf small{display:block;color:var(--tinta-3);font-size:12px;margin-top:4px;line-height:1.45;overflow-wrap:anywhere}
 .campo-cf .limpar{display:inline-flex;gap:5px;align-items:center;font-weight:400;font-size:12px;color:var(--tinta-3);margin-top:4px}
 .ok-tag{font-size:11px;font-weight:600;color:#0a6b3c;background:#e6f4e8;padding:1px 7px;border-radius:999px;margin-left:4px}
 .chave{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-size:13.5px;user-select:none}
@@ -120,7 +120,17 @@ $status = array(
 .log th{text-align:left;color:var(--tinta-3);font-weight:500;padding:0 8px 8px;border-bottom:1px solid var(--linha)}
 .log td{padding:8px;border-bottom:1px solid var(--linha-2);vertical-align:top}
 .log .ok{color:#0a6b3c;font-weight:600}.log .falha{color:var(--vermelho-2);font-weight:600}
-@media (max-width:980px){.cf-grade{grid-template-columns:1fr}.cf-indice{position:static;flex-direction:row;flex-wrap:wrap}}
+@media (max-width:980px){
+  .cf-grade{grid-template-columns:minmax(0,1fr)}
+  .cf-indice{position:sticky;top:calc(52px + env(safe-area-inset-top));z-index:5;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+    margin:0 -16px;padding:8px 16px;background:var(--papel);border-bottom:1px solid var(--linha)}
+  .cf-indice::-webkit-scrollbar{display:none}
+  .cf-indice a{flex:none;white-space:nowrap;background:#fff;border:1px solid var(--linha);border-radius:999px;padding:6px 12px}
+  .cf-cab{flex-direction:column;gap:10px}
+  .cf-corpo{grid-template-columns:minmax(0,1fr)}
+  .cf-teste{margin-left:0;width:100%}.cf-teste .campo{flex:1;width:auto;min-width:0}
+  .cf-status{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 </style>
 
 <div class="cf-status" data-tour="1" data-tour-titulo="O que está funcionando" data-tour-texto="Resumo do que está configurado e ligado. Verde é ligado e pronto para uso.">
@@ -185,7 +195,7 @@ $status = array(
   <?= cfSegredo('github_token', 'Token do GitHub', 'Token com permissão de criar issues nesse repositório.') ?>
 <?php cfFim('<form method="post" style="margin-left:auto"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input type="hidden" name="acao" value="rodar_temas"><button class="btn" type="submit">Agrupar agora</button></form>'); ?>
 <?php if ($TEMAS_TODOS): ?>
-  <div class="painel" style="margin:-8px 0 16px">
+  <div class="painel" style="margin:-8px 0 16px;overflow-x:auto">
     <table class="log"><thead><tr><th>Tema</th><th>Casos</th><th>Situação</th><th></th></tr></thead><tbody>
     <?php foreach ($TEMAS_TODOS as $t): ?>
       <tr><td><b><?= h($t['titulo']) ?></b><br><span style="color:var(--tinta-3)"><?= h($t['descricao']) ?></span></td><td><?= (int)$t['qtd'] ?></td>

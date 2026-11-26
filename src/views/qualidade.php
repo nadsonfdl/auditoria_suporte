@@ -196,14 +196,14 @@ $realHum  = $kq['com_humano'] ? taxa($kq['com_humano_resolvidas'], $kq['com_huma
 (function () {
   Chart.defaults.font.family = '"IBM Plex Sans", system-ui, sans-serif';
   Chart.defaults.font.size = 12; Chart.defaults.color = '#78859a'; Chart.defaults.maintainAspectRatio = false;
-  var tt = Chart.defaults.plugins.tooltip; tt.backgroundColor = '#0f1d33'; tt.padding = 10; tt.cornerRadius = 8;
+  var tt = Chart.defaults.plugins.tooltip; tt.backgroundColor = '#0c2133'; tt.padding = 10; tt.cornerRadius = 8;
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) Chart.defaults.animation = false;
   var c = document.getElementById('gReal'), g = c.getContext('2d').createLinearGradient(0, 0, 0, 240);
-  g.addColorStop(0, '#1b64be33'); g.addColorStop(1, '#1b64be00');
+  g.addColorStop(0, '#1e6fa633'); g.addColorStop(1, '#1e6fa600');
   var notas = <?= json_encode($pnota) ?>;
   new Chart(c, {
     type: 'line',
-    data: {labels: <?= json_encode($lbl) ?>, datasets: [{label: 'Resolvidas de fato', data: <?= json_encode($preal) ?>, borderColor: '#1b64be', backgroundColor: g, fill: true, borderWidth: 2, pointRadius: <?= count($lbl) < 3 ? 4 : 0 ?>, pointHoverRadius: 5, pointHitRadius: 12, tension: .3, spanGaps: true}]},
+    data: {labels: <?= json_encode($lbl) ?>, datasets: [{label: 'Resolvidas de fato', data: <?= json_encode($preal) ?>, borderColor: '#1e6fa6', backgroundColor: g, fill: true, borderWidth: 2, pointRadius: <?= count($lbl) < 3 ? 4 : 0 ?>, pointHoverRadius: 5, pointHitRadius: 12, tension: .3, spanGaps: true}]},
     options: {interaction: {mode: 'index', intersect: false}, plugins: {legend: {display: false}, tooltip: {displayColors: false, callbacks: {
                 label: function (k) { return 'Resolvidas de fato: ' + (k.parsed.y === null ? '—' : k.parsed.y.toLocaleString('pt-BR') + '%'); },
                 afterLabel: function (k) { var n = notas[k.dataIndex]; return n === null ? '' : 'Nota de qualidade: ' + n.toLocaleString('pt-BR'); }}}},

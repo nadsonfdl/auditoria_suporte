@@ -13,17 +13,24 @@ $NAV = array('visao' => 'Diagnóstico', 'qualidade' => 'Qualidade (IA)', 'atende
 if ($ADMIN) {
     $NAV['config'] = 'Configurações';
 }
+$CURTO = array('visao' => 'Diagnóstico', 'qualidade' => 'Qualidade', 'atendentes' => 'Equipe', 'fila' => 'Auditoria', 'config' => 'Ajustes');
 ?><!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= h($TITULOS[$pagina]) ?> · Auditoria do Suporte</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1c2c">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Auditoria">
+<link rel="apple-touch-icon" href="<?= h($SELF) ?>?img=apple-touch-icon.png">
+<title><?= h($TITULOS[$pagina]) ?> · Auditoria do Suporte · iGUT Clínicas</title>
+<link rel="icon" type="image/png" href="<?= h($SELF) ?>?img=favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
-  --tinta:#0f1d33; --tinta-2:#4b5a70; --tinta-3:#78859a; --papel:#f4f6fa; --cartao:#ffffff; --linha:#e2e7ef; --linha-2:#edf1f7;
-  --pri:#1b64be; --pri-2:#14498f; --pri-claro:#e8f0fb; --pri-foco:#b6d5f8;
+  --tinta:#0c2133; --tinta-2:#4b5a70; --tinta-3:#78859a; --papel:#f4f6fa; --cartao:#ffffff; --linha:#e2e7ef; --linha-2:#edf1f7;
+  --pri:#1e6fa6; --pri-2:#155a87; --pri-claro:#e5f1f7; --pri-foco:#b2dbea;
   --vermelho:#d6453d; --vermelho-2:#a2312a; --vermelho-claro:#fbe9e7;
   --ambar:#9a6412; --ambar-claro:#fbf1dc; --laranja:#e07a2e; --violeta:#5b4bc4; --violeta-claro:#efedfb;
   --serif:"IBM Plex Serif",Georgia,"Times New Roman",serif; --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -36,17 +43,16 @@ a{color:var(--pri-2)}
 .num,.tab{font-variant-numeric:tabular-nums}
 
 /* ---------- estrutura ---------- */
-.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh;background:linear-gradient(to right,var(--tinta) 236px,var(--papel) 236px)}
-.lateral{background:var(--tinta);color:#c6d1e3;padding:22px 16px;display:flex;flex-direction:column;gap:28px;position:sticky;top:0;height:100vh}
-.marca{display:flex;gap:11px;align-items:center;padding:0 6px;color:#fff;text-decoration:none}
-.marca .sel{width:34px;height:34px;border-radius:9px;background:var(--pri);display:grid;place-items:center;flex:none}
-.marca b{display:block;font-weight:600;font-size:14.5px;line-height:1.25}
-.marca small{display:block;color:#8b9bb5;font-size:12px}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh;background:linear-gradient(to right,#0a1c2c 236px,var(--papel) 236px)}
+.lateral{background:radial-gradient(420px 320px at 0% 0%, rgba(30,111,166,.32), transparent 70%),#0a1c2c;color:#c6d1e3;padding:22px 16px;display:flex;flex-direction:column;gap:28px;position:sticky;top:0;height:100vh}
+.marca{display:flex;flex-direction:column;gap:10px;padding:2px 8px 0;color:#fff;text-decoration:none}
+.marca img{height:40px;width:auto;align-self:flex-start}
+.marca .produto{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:#9cb6c9;padding:5px 10px 5px 8px;border:1px solid rgba(116,186,210,.22);border-radius:999px;align-self:flex-start;background:rgba(34,184,207,.06)}
 .nav{display:flex;flex-direction:column;gap:2px}
 .nav a{display:flex;align-items:center;gap:11px;padding:10px 10px;border-radius:8px;color:#c6d1e3;text-decoration:none;font-weight:500}
 .nav a svg{flex:none;opacity:.8}
 .nav a:hover{background:rgba(255,255,255,.06);color:#fff}
-.nav a.ativa{background:rgba(51,140,237,.22);color:#fff}
+.nav a.ativa{background:rgba(34,184,207,.16);color:#fff}
 .nav a.ativa svg{opacity:1}
 .nav .badge{margin-left:auto;background:var(--vermelho);color:#fff;font-size:11.5px;font-weight:600;border-radius:999px;padding:1px 8px}
 .lateral .pe{margin-top:auto;font-size:12.5px;color:#8b9bb5;padding:0 6px;display:flex;flex-direction:column;gap:10px}
@@ -101,14 +107,47 @@ input[type=date].campo{padding-right:10px;background-image:none}
 .tag.g-media{background:var(--ambar-claro);color:var(--ambar)}
 .tag .pt{width:6px;height:6px;border-radius:50%;background:currentColor}
 .nota{width:34px;height:34px;flex:none;border-radius:9px;display:grid;place-items:center;font-weight:600;font-size:15px;color:#fff;background:var(--vermelho)}
-.nota.n2{background:#e07b74}.nota.n3{background:#9aa5b6}.nota.n4{background:#84b9f3}.nota.n5{background:var(--pri)}
+.nota.n2{background:#e07b74}.nota.n3{background:#9aa5b6}.nota.n4{background:#86c4da}.nota.n5{background:var(--pri)}
 
 @media (max-width:1180px){.c8,.c7,.c6,.c5,.c4{grid-column:span 12}}
+.r-curto{display:none}
 @media (max-width:860px){
+  /* ---------- celular: topo compacto + abas fixas embaixo, como app ---------- */
   .app{grid-template-columns:1fr;background:var(--papel)}
-  .lateral{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:12px;padding:14px 16px}
-  .nav{flex-direction:row;flex-wrap:wrap}.lateral .pe{display:none}
-  .principal{padding:20px 16px 48px}
+  .lateral{position:sticky;top:0;z-index:40;height:auto;flex-direction:row;align-items:center;gap:12px;
+    padding:calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 10px calc(16px + env(safe-area-inset-left));
+    box-shadow:0 1px 0 rgba(255,255,255,.06)}
+  .marca{flex-direction:row;align-items:center;gap:10px;padding:0}
+  .marca img{height:28px}
+  .marca .produto{padding:3px 9px 3px 7px;font-size:11.5px}
+  .lateral .pe{display:none}
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:50;flex-direction:row;gap:0;justify-content:space-around;
+    background:rgba(10,28,44,.96);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-top:1px solid rgba(255,255,255,.08);padding:6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left))}
+  .nav a{flex:1;flex-direction:column;gap:3px;padding:6px 2px;border-radius:10px;font-size:10.5px;font-weight:500;position:relative;min-width:0;text-align:center;-webkit-tap-highlight-color:transparent}
+  .nav a svg{width:22px;height:22px}
+  .nav a.ativa{background:none;color:#5fd6e6}
+  .nav a.ativa svg{opacity:1}
+  .nav .r-longo{display:none}.nav .r-curto{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .nav .badge{position:absolute;top:1px;left:calc(50% + 6px);margin:0;font-size:10px;padding:0 6px;line-height:16px}
+  .principal{padding:18px calc(16px + env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left))}
+  .cabeca{margin-bottom:12px;gap:12px;align-items:flex-start;flex-wrap:nowrap}
+  .cabeca h1{font-size:23px}
+  .cabeca .periodo{font-size:13px}
+  #btApresentar,#btImprimir{display:none}
+  #btTour{padding:8px 10px;font-size:0;gap:0}
+  #btTour svg{width:18px;height:18px}
+  /* filtros numa linha só, com rolagem lateral */
+  .filtros{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -16px 18px;padding:2px 16px 14px}
+  .filtros::-webkit-scrollbar{display:none}
+  .filtros>*{flex:none}
+  .filtros .comp{display:none}
+  /* o Safari do iPhone dá zoom em campos com fonte menor que 16px */
+  input,select,textarea,.campo{font-size:16px!important}
+  .seg a{padding:7px 12px}
+  .toast{left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));max-width:none}
+  .grade{gap:12px}
+  .painel{padding:16px}
 }
 
 /* ---------- ferramentas do cabeçalho ---------- */
@@ -212,15 +251,15 @@ body.apresentar .sair-apresentacao{display:inline-flex}
 <script>if (!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) document.body.classList.add('anima');</script>
 <div class="app">
 <aside class="lateral">
-  <a class="marca" href="<?= h(url(array('p' => 'visao'), array('semana', 'status'))) ?>">
-    <span class="sel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg></span>
-    <span><b>Auditoria do Suporte</b><small>iTalk, conta Suporte</small></span>
+  <a class="marca" href="<?= h(url(array('p' => 'visao'), array('semana', 'status'))) ?>" aria-label="iGUT Clínicas, Auditoria do Suporte: ir para o Diagnóstico">
+    <img src="<?= h($SELF) ?>?img=logo-igut-branca.png" alt="iGUT Clínicas" width="137" height="40">
+    <span class="produto"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#22b8cf" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>Auditoria do Suporte</span>
   </a>
   <nav class="nav" aria-label="Seções" data-tour="20" data-tour-titulo="As telas do painel" data-tour-texto="Diagnóstico para a visão geral, Qualidade para a auditoria de todas as conversas pela IA, Atendentes para cada pessoa, Auditoria CSAT para o trabalho semanal do supervisor e Configurações para ligar envios e metas.">
     <?php foreach ($NAV as $k => $v): ?>
       <a href="<?= h(url(array('p' => $k), $k === 'fila' ? array() : array('semana', 'status'))) ?>" class="<?= $pagina === $k ? 'ativa' : '' ?>" <?= $pagina === $k ? 'aria-current="page"' : '' ?>>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><?= $icone[$k] ?></svg>
-        <?= $v ?>
+        <span class="r-longo"><?= $v ?></span><span class="r-curto"><?= $CURTO[$k] ?></span>
         <?php if ($k === 'fila' && $PEND_TOTAL): ?><span class="badge" title="<?= (int)$PEND_TOTAL ?> notas baixas aguardando avaliação"><?= (int)$PEND_TOTAL ?></span><?php endif; ?>
       </a>
     <?php endforeach; ?>

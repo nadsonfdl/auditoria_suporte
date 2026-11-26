@@ -41,7 +41,7 @@ $lacuna = array(
 .lacuna .top b{font-size:22px;font-weight:600;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
 .lacuna .trilho{height:12px;background:#e6ebf3;border-radius:6px;overflow:hidden;margin:7px 0 4px}
 .lacuna .trilho i{display:block;height:100%;border-radius:6px;width:0;animation:crescer 1.1s cubic-bezier(.2,.7,.2,1) forwards}
-.lacuna .l-sis i{background:#a8b2c2}.lacuna .l-real i{background:#9dc8f7}.lacuna .l-ia i{background:#338ced}.lacuna .l-cli i{background:var(--pri)}
+.lacuna .l-sis i{background:#a8b2c2}.lacuna .l-real i{background:#a5d3e3}.lacuna .l-ia i{background:#45a0c1}.lacuna .l-cli i{background:var(--pri)}
 .lacuna .linha:nth-child(3) .trilho i{animation-delay:.12s}.lacuna .linha:nth-child(4) .trilho i{animation-delay:.24s}.lacuna .linha:nth-child(5) .trilho i{animation-delay:.36s}
 .lacuna small{color:var(--tinta-3);font-size:12px}
 .lacuna .conclusao{margin-top:auto;padding-top:14px;border-top:1px dashed #d3dae5;color:var(--tinta-2);font-size:13px}
@@ -123,7 +123,7 @@ $lacuna = array(
   <div class="ind">
     <div class="rot">Conversas <?= explica('conversas') ?></div>
     <div class="val"><?= num($kc['conversas']) ?></div>
-    <div class="baixo"><?= delta($kc['conversas'], $kca['conversas'], 'rel', true) ?></div><?= spark($vol, '#1b64be') ?>
+    <div class="baixo"><?= delta($kc['conversas'], $kca['conversas'], 'rel', true) ?></div><?= spark($vol, '#1e6fa6') ?>
   </div>
   <div class="ind">
     <div class="rot">Encerradas <?= explica('encerradas') ?></div>
@@ -143,7 +143,7 @@ $lacuna = array(
   <div class="ind">
     <div class="rot">CSAT médio <?= explica('csat') ?></div>
     <div class="val"><?= $ks['respostas'] ? num($ks['media'], 2) : '—' ?><small> de 5</small></div>
-    <div class="baixo"><?= delta($ks['media'], $ksa['media'], 'abs', true) ?><?= metaHtml($ks['respostas'] ? $ks['media'] : null, conf('meta_csat'), true, str_replace('.', ',', conf('meta_csat'))) ?></div><?= spark($med, '#1b64be') ?>
+    <div class="baixo"><?= delta($ks['media'], $ksa['media'], 'abs', true) ?><?= metaHtml($ks['respostas'] ? $ks['media'] : null, conf('meta_csat'), true, str_replace('.', ',', conf('meta_csat'))) ?></div><?= spark($med, '#1e6fa6') ?>
   </div>
   <div class="ind alerta">
     <div class="rot">Notas baixas <?= explica('notas_baixas') ?></div>
@@ -166,7 +166,7 @@ $lacuna = array(
     <h3 class="cab-painel">Quando o suporte é procurado <?= explica('calor') ?></h3><p class="leg">Conversas abertas por dia da semana e hora</p>
     <?php if ($maxCalor):
         $dias  = array(1 => 'Seg', 2 => 'Ter', 3 => 'Qua', 4 => 'Qui', 5 => 'Sex', 6 => 'Sáb', 7 => 'Dom');
-        $rampa = array('#f1f5fb', '#cce3fd', '#9dc8f7', '#6aabf1', '#338ced', '#2370cd', '#1b64be', '#14498f'); ?>
+        $rampa = array('#eef6f9', '#cde7f0', '#a5d3e3', '#74bad2', '#45a0c1', '#2a85aa', '#1e6fa6', '#155a87'); ?>
       <div class="calor" role="img" aria-label="Mapa de calor: pico <?= h($DIAS_NOME[$pico['d']]) ?> às <?= (int)$pico['h'] ?>h">
         <div></div><?php for ($hh = 0; $hh < 24; $hh++): ?><div class="hd"><?= $hh % 3 === 0 ? $hh . 'h' : '' ?></div><?php endfor; ?>
         <?php foreach ($dias as $d => $nome): ?>
@@ -304,7 +304,7 @@ $lacuna = array(
 <script><?php readfile(__DIR__ . '/../vendor/chart.umd.min.js'); /* Chart.js 4.4.1, MIT */ ?></script>
 <script>
 (function () {
-  var C = {pri: '#1b64be', pri2: '#14498f', laranja: '#e07a2e', cinza: '#a8b2c2', grade: '#edf1f7', eixo: '#d3dae5', texto: '#78859a'};
+  var C = {pri: '#1e6fa6', pri2: '#155a87', laranja: '#e07a2e', cinza: '#a8b2c2', grade: '#edf1f7', eixo: '#d3dae5', texto: '#78859a'};
   Chart.defaults.font.family = '"IBM Plex Sans", system-ui, sans-serif';
   Chart.defaults.font.size = 12;
   Chart.defaults.color = C.texto;
@@ -315,7 +315,7 @@ $lacuna = array(
   Chart.defaults.plugins.legend.labels.boxHeight = 8;
   Chart.defaults.plugins.legend.labels.color = '#4b5a70';
   var tt = Chart.defaults.plugins.tooltip;
-  tt.backgroundColor = '#0f1d33'; tt.padding = 10; tt.cornerRadius = 8; tt.boxPadding = 4; tt.titleFont = {weight: '600'}; tt.displayColors = true;
+  tt.backgroundColor = '#0c2133'; tt.padding = 10; tt.cornerRadius = 8; tt.boxPadding = 4; tt.titleFont = {weight: '600'}; tt.displayColors = true;
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) Chart.defaults.animation = false;
 
   var y = function (extra) { var o = {grid: {color: C.grade, drawTicks: false}, border: {display: false}, ticks: {padding: 8}}; for (var k in extra) o[k] = extra[k]; return o; };
@@ -355,7 +355,7 @@ $lacuna = array(
   var cC = document.getElementById('gCsat');
   new Chart(cC, {
     type: 'line',
-    data: {labels: LS, datasets: [linha(C.pri, {label: 'CSAT médio', data: <?= json_encode($med) ?>, respostas: <?= json_encode($resp) ?>, fill: true, backgroundColor: degrade(cC.getContext('2d'), '#1b64be'), pointRadius: 2.5})]},
+    data: {labels: LS, datasets: [linha(C.pri, {label: 'CSAT médio', data: <?= json_encode($med) ?>, respostas: <?= json_encode($resp) ?>, fill: true, backgroundColor: degrade(cC.getContext('2d'), '#1e6fa6'), pointRadius: 2.5})]},
     options: {interaction: cruz, plugins: {legend: {display: false}, tooltip: {displayColors: false, callbacks: {label: function (c) { return 'Média ' + c.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ', ' + c.dataset.respostas[c.dataIndex] + ' respostas'; }}}},
               scales: {x: x, y: y({min: 1, max: 5, ticks: {padding: 8, stepSize: 1}})}}
   });
@@ -374,7 +374,7 @@ $lacuna = array(
   var dist = <?= json_encode(array_values($dist)) ?>, totD = dist.reduce(function (a, b) { return a + b; }, 0) || 1;
   new Chart(document.getElementById('gNotas'), {
     type: 'bar',
-    data: {labels: ['Nota 1', 'Nota 2', 'Nota 3', 'Nota 4', 'Nota 5'], datasets: [{label: 'Respostas', data: dist, backgroundColor: ['#d6453d', '#e07b74', '#b4bdcb', '#84b9f3', '#1b64be'], borderRadius: 4, borderSkipped: 'bottom', maxBarThickness: 40}]},
+    data: {labels: ['Nota 1', 'Nota 2', 'Nota 3', 'Nota 4', 'Nota 5'], datasets: [{label: 'Respostas', data: dist, backgroundColor: ['#d6453d', '#e07b74', '#b4bdcb', '#86c4da', '#1e6fa6'], borderRadius: 4, borderSkipped: 'bottom', maxBarThickness: 40}]},
     options: {plugins: {legend: {display: false}, tooltip: {displayColors: false, callbacks: {label: function (c) { return br(c.parsed.y) + ' respostas (' + Math.round(100 * c.parsed.y / totD) + '%)'; }}}},
               scales: {x: x, y: y({beginAtZero: true, ticks: {padding: 8, precision: 0}})}}
   });
